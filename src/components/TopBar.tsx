@@ -85,24 +85,24 @@ export const TopBar: React.FC<TopBarProps> = ({
   );
 
   return (
-    <header className="h-13 bg-[#131318] border-b border-[#242430] flex items-center justify-between px-3 text-xs z-30 relative select-none shadow-md">
+    <header className="h-13 bg-[#131318] border-b border-[#242430] flex items-center justify-between px-3 text-xs z-30 relative select-none shadow-md overflow-x-auto no-scrollbar min-w-0">
       
       {/* 1. GRUPO ESQUERDO: AÇÕES DE COMPILAÇÃO, GRAVAÇÃO E SELEÇÃO */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
         
         {/* Botão Verificar / Compilar */}
         <button
           onClick={onCompile}
           disabled={isCompiling || isUploading || isExportingBinary || isReadingFirmware}
           title="Verificar / Compilar Código (Ctrl+R)"
-          className={`flex items-center gap-1.5 h-8 px-3 rounded-lg font-semibold text-white transition-all shadow-sm ${
+          className={`flex items-center gap-1.5 h-8 px-3 rounded-lg font-semibold text-white transition-all shadow-sm shrink-0 whitespace-nowrap ${
             isCompiling 
               ? 'bg-[#007D82] opacity-80 cursor-wait' 
               : 'bg-[#00979C] hover:bg-[#00B4B9] active:scale-95 shadow-[#00979C]/20'
           }`}
         >
-          <Check className={`w-3.5 h-3.5 stroke-[2.5] ${isCompiling ? 'animate-spin' : ''}`} />
-          <span>{isCompiling ? 'Compilando...' : 'Verificar'}</span>
+          <Check className={`w-3.5 h-3.5 stroke-[2.5] shrink-0 ${isCompiling ? 'animate-spin' : ''}`} />
+          <span className="whitespace-nowrap inline-block">{isCompiling ? 'Compilando...' : 'Verificar'}</span>
         </button>
 
         {/* Botão Carregar / Upload */}
@@ -110,7 +110,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           onClick={onUpload}
           disabled={isCompiling || isUploading || isExportingBinary || isReadingFirmware || !selectedPort}
           title={!selectedPort ? 'Selecione uma porta COM primeiro' : 'Carregar para a Placa (Ctrl+U)'}
-          className={`flex items-center gap-1.5 h-8 px-3 rounded-lg font-semibold text-white transition-all shadow-sm ${
+          className={`flex items-center gap-1.5 h-8 px-3 rounded-lg font-semibold text-white transition-all shadow-sm shrink-0 whitespace-nowrap ${
             isUploading 
               ? 'bg-[#b85310] opacity-80 cursor-wait' 
               : !selectedPort
@@ -118,18 +118,18 @@ export const TopBar: React.FC<TopBarProps> = ({
                 : 'bg-[#E47128] hover:bg-[#fa8234] active:scale-95 shadow-[#E47128]/20'
           }`}
         >
-          <ArrowRight className={`w-3.5 h-3.5 stroke-[2.5] ${isUploading ? 'animate-bounce' : ''}`} />
-          <span>{isUploading ? 'Gravando...' : 'Carregar'}</span>
+          <ArrowRight className={`w-3.5 h-3.5 stroke-[2.5] shrink-0 ${isUploading ? 'animate-bounce' : ''}`} />
+          <span className="whitespace-nowrap inline-block">{isUploading ? 'Gravando...' : 'Carregar'}</span>
         </button>
 
         {/* GRUPO LER & DESCOMPILAR CHIP (ao lado de Carregar) */}
-        <div className="relative flex items-center">
-          <div className="flex items-center rounded-lg overflow-hidden border border-cyan-500/40 shadow-sm shadow-cyan-900/20">
+        <div className="relative flex items-center shrink-0 whitespace-nowrap">
+          <div className="flex items-center rounded-lg overflow-hidden border border-cyan-500/40 shadow-sm shadow-cyan-900/20 shrink-0 whitespace-nowrap">
             <button
               onClick={onReadChipFirmware}
               disabled={isCompiling || isUploading || isExportingBinary || isReadingFirmware || !selectedPort}
               title={!selectedPort ? 'Conecte a uma porta COM para ler o chip' : 'Ler e Descompilar Código em Silício do Chip'}
-              className={`flex items-center gap-1.5 h-8 px-3 font-semibold text-white transition-all ${
+              className={`flex items-center gap-1.5 h-8 px-3 font-semibold text-white transition-all whitespace-nowrap shrink-0 ${
                 isReadingFirmware
                   ? 'bg-cyan-800 opacity-90 cursor-wait'
                   : !selectedPort
@@ -137,17 +137,19 @@ export const TopBar: React.FC<TopBarProps> = ({
                     : 'bg-cyan-600 hover:bg-cyan-500 active:scale-95'
               }`}
             >
-              <Cpu className={`w-3.5 h-3.5 ${isReadingFirmware ? 'animate-spin' : ''}`} />
-              <span>{isReadingFirmware ? 'Lendo Chip...' : 'Ler / Descompilar Chip'}</span>
+              <Cpu className={`w-3.5 h-3.5 shrink-0 ${isReadingFirmware ? 'animate-spin' : ''}`} />
+              <span className="whitespace-nowrap inline-block leading-normal">
+                {isReadingFirmware ? 'Lendo Chip...' : 'Ler / Descompilar Chip'}
+              </span>
             </button>
 
             <button
               onClick={() => setChipMenuOpen(!chipMenuOpen)}
               disabled={isCompiling || isUploading || isExportingBinary || isReadingFirmware || !selectedPort}
-              className="h-8 px-1.5 bg-cyan-700 hover:bg-cyan-600 text-white border-l border-cyan-500/40 transition flex items-center justify-center"
+              className="h-8 px-1.5 bg-cyan-700 hover:bg-cyan-600 text-white border-l border-cyan-500/40 transition flex items-center justify-center shrink-0"
               title="Opções de Leitura e Exportação do Chip"
             >
-              <ChevronDown className="w-3.5 h-3.5" />
+              <ChevronDown className="w-3.5 h-3.5 shrink-0" />
             </button>
           </div>
 
@@ -161,9 +163,9 @@ export const TopBar: React.FC<TopBarProps> = ({
                 }}
                 className="w-full text-left px-3 py-2 hover:bg-[#1E1E2A] rounded-lg text-xs font-medium text-cyan-300 hover:text-cyan-200 flex items-center gap-2 transition"
               >
-                <Cpu className="w-4 h-4 text-cyan-400" />
+                <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
                 <div>
-                  <div className="font-bold">Ler & Descompilar Chip</div>
+                  <div className="font-bold whitespace-nowrap">Ler & Descompilar Chip</div>
                   <div className="text-[10px] text-gray-400">Puxa o código da Flash e descompila para C</div>
                 </div>
               </button>
@@ -175,9 +177,9 @@ export const TopBar: React.FC<TopBarProps> = ({
                 }}
                 className="w-full text-left px-3 py-2 hover:bg-[#1E1E2A] rounded-lg text-xs font-medium text-emerald-300 hover:text-emerald-200 flex items-center gap-2 transition border-t border-gray-800 mt-1"
               >
-                <Binary className="w-4 h-4 text-emerald-400" />
+                <Binary className="w-4 h-4 text-emerald-400 shrink-0" />
                 <div>
-                  <div className="font-bold">Exportar Binário Compilado</div>
+                  <div className="font-bold whitespace-nowrap">Exportar Binário Compilado</div>
                   <div className="text-[10px] text-gray-400">Salva o binário (.bin/.hex) do projeto atual</div>
                 </div>
               </button>
@@ -190,34 +192,35 @@ export const TopBar: React.FC<TopBarProps> = ({
           onClick={onExportBinary}
           disabled={isCompiling || isUploading || isExportingBinary || !selectedBoard}
           title="Exportar Binário Compilado (.bin / .hex) para a Área de Trabalho"
-          className={`flex items-center gap-1.5 h-8 px-2.5 rounded-lg border transition-all text-xs font-medium ${
+          className={`flex items-center gap-1.5 h-8 px-2.5 rounded-lg border transition-all text-xs font-medium shrink-0 whitespace-nowrap ${
             isExportingBinary
               ? 'bg-[#261E38] border-purple-600 text-purple-200 cursor-wait'
               : 'bg-[#181822] hover:bg-[#222232] border-[#2A2A3A] hover:border-purple-600/50 text-gray-300 hover:text-white active:scale-95'
           }`}
         >
-          <Binary className={`w-3.5 h-3.5 text-purple-400 ${isExportingBinary ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">{isExportingBinary ? 'Exportando...' : 'Exportar Binário'}</span>
+          <Binary className={`w-3.5 h-3.5 text-purple-400 shrink-0 ${isExportingBinary ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline whitespace-nowrap inline-block">{isExportingBinary ? 'Exportando...' : 'Exportar Binário'}</span>
         </button>
 
 
-        <div className="h-5 w-[1px] bg-[#2A2A3A] mx-1" />
+        <div className="h-5 w-[1px] bg-[#2A2A3A] mx-1 shrink-0" />
 
         {/* Seletor de Placa */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             onClick={() => {
               setBoardDropdownOpen(!boardDropdownOpen);
               setPortDropdownOpen(false);
             }}
-            className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all"
+            className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap"
           >
-            <Cpu className="w-3.5 h-3.5 text-[#00B4B9]" />
+            <Cpu className="w-3.5 h-3.5 text-[#00B4B9] shrink-0" />
             <span className="max-w-[140px] truncate font-medium">
               {selectedBoard ? selectedBoard.name : 'Selecione a Placa'}
             </span>
-            <ChevronDown className="w-3 h-3 text-gray-400 opacity-75" />
+            <ChevronDown className="w-3 h-3 text-gray-400 opacity-75 shrink-0" />
           </button>
+
 
           {boardDropdownOpen && (
             <div className="absolute left-0 mt-1 w-72 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md">
@@ -253,19 +256,19 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
 
         {/* Seletor de Porta COM */}
-        <div className="relative">
+        <div className="relative shrink-0">
           <button
             onClick={() => {
               setPortDropdownOpen(!portDropdownOpen);
               setBoardDropdownOpen(false);
             }}
-            className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all"
+            className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap"
           >
-            <Usb className={`w-3.5 h-3.5 ${selectedPort ? 'text-[#00B4B9]' : 'text-gray-400'}`} />
+            <Usb className={`w-3.5 h-3.5 ${selectedPort ? 'text-[#00B4B9]' : 'text-gray-400'} shrink-0`} />
             <span className="font-medium">
               {selectedPort ? selectedPort : 'Sem Porta'}
             </span>
-            <ChevronDown className="w-3 h-3 text-gray-400 opacity-75" />
+            <ChevronDown className="w-3 h-3 text-gray-400 opacity-75 shrink-0" />
           </button>
 
           {portDropdownOpen && (
@@ -315,13 +318,14 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* 2. GRUPO CENTRAL: IDENTIFICAÇÃO DO PROJETO */}
-      <div className="hidden lg:flex items-center gap-1.5 text-xs text-gray-300 font-mono bg-[#181822] px-3 h-7 rounded-lg border border-[#2A2A38]">
-        <Code2 className="w-3.5 h-3.5 text-[#00B4B9]" />
-        <span>{fileName || 'sketch.ino'}</span>
+      <div className="hidden xl:flex items-center gap-1.5 text-xs text-gray-300 font-mono bg-[#181822] px-3 h-7 rounded-lg border border-[#2A2A38] shrink-0">
+        <Code2 className="w-3.5 h-3.5 text-[#00B4B9] shrink-0" />
+        <span className="whitespace-nowrap">{fileName || 'sketch.ino'}</span>
       </div>
 
       {/* 3. GRUPO DIREITO: FERRAMENTAS INTEGRADAS E UTILITÁRIOS */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
+
         
         {/* Abrir / Salvar */}
         <div className="flex items-center bg-[#181822] border border-[#2A2A3A] rounded-lg p-0.5">
