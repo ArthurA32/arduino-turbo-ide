@@ -79,6 +79,29 @@ function packageAndExport(arch, label, folderName, zipName) {
   // Copiar pasta descompactada
   fs.cpSync(packagedFolder, targetOutputDir, { recursive: true });
 
+  // Injetar ícone e propriedades nativas no executável via rcedit
+  const rceditExe = path.join(projectRoot, 'bin', 'tools', 'rcedit.exe');
+  const appIconIco = path.join(projectRoot, 'build', 'icon.ico');
+  const appIconPng = path.join(projectRoot, 'build', 'icon.png');
+  const targetExe = path.join(targetOutputDir, 'Arduino Turbo IDE.exe');
+
+  if (fs.existsSync(appIconIco)) {
+    fs.copyFileSync(appIconIco, path.join(targetOutputDir, 'resources', 'icon.ico'));
+  }
+  if (fs.existsSync(appIconPng)) {
+    fs.copyFileSync(appIconPng, path.join(targetOutputDir, 'resources', 'icon.png'));
+  }
+
+  if (fs.existsSync(rceditExe) && fs.existsSync(appIconIco) && fs.existsSync(targetExe)) {
+    try {
+      console.log(`   🎨 Injetando ícone nativo oficial no executável via rcedit...`);
+      execSync(`"${rceditExe}" "${targetExe}" --set-icon "${appIconIco}" --set-version-string "FileDescription" "Arduino Turbo IDE" --set-version-string "ProductName" "Arduino Turbo IDE"`, { stdio: 'inherit' });
+      console.log(`   ✔ Ícone e metadados injetados com sucesso no executável.`);
+    } catch (e) {
+      console.warn('   Aviso ao rodar rcedit no executável:', e.message);
+    }
+  }
+
   // Copiar binários nativos dedicados do arduino-cli de acordo com a arquitetura
   const destBin = path.join(targetOutputDir, 'resources', 'bin');
   fs.mkdirSync(destBin, { recursive: true });

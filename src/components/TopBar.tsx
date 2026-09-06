@@ -18,6 +18,7 @@ import {
   Wrench,
   Code2
 } from 'lucide-react';
+import appLogo from '../assets/logo.png';
 
 interface TopBarProps {
   onCompile: () => void;
@@ -93,7 +94,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Logotipo Oficial */}
         <div className="flex items-center gap-2 pr-1.5 shrink-0 select-none">
           <img 
-            src="/icon.png" 
+            src={appLogo} 
             alt="Logo" 
             className="w-6 h-6 rounded-lg shadow-sm border border-cyan-500/30 object-cover"
           />

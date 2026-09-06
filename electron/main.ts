@@ -104,12 +104,15 @@ function resolveIndexPath(): string {
 
 function resolveAppIcon(): string | undefined {
   const candidates = [
+    path.join(process.resourcesPath, 'icon.png'),
+    path.join(process.resourcesPath, 'icon.ico'),
+    path.join(process.resourcesPath, 'app', 'build', 'icon.png'),
+    path.join(process.resourcesPath, 'app', 'build', 'icon.ico'),
     path.join(currentDir, '..', 'build', 'icon.png'),
     path.join(currentDir, '..', 'build', 'icon.ico'),
     path.join(currentDir, '..', 'public', 'icon.png'),
     path.join(app.getAppPath(), 'build', 'icon.png'),
-    path.join(app.getAppPath(), 'build', 'icon.ico'),
-    path.join(process.resourcesPath, 'app', 'build', 'icon.ico')
+    path.join(app.getAppPath(), 'build', 'icon.ico')
   ];
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) return candidate;
