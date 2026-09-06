@@ -10,6 +10,7 @@
     "bin/**/*"
   ],
   "win": {
+    "icon": "build/icon.ico",
     "target": [
       {
         "target": "dir",
@@ -18,5 +19,6 @@
     ],
     "requestedExecutionLevel": "asInvoker"
   },
+
   "asar": false
 }

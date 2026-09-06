@@ -102,12 +102,28 @@ function resolveIndexPath(): string {
   return path.join(currentDir, '..', 'dist', 'index.html');
 }
 
+function resolveAppIcon(): string | undefined {
+  const candidates = [
+    path.join(currentDir, '..', 'build', 'icon.png'),
+    path.join(currentDir, '..', 'build', 'icon.ico'),
+    path.join(currentDir, '..', 'public', 'icon.png'),
+    path.join(app.getAppPath(), 'build', 'icon.png'),
+    path.join(app.getAppPath(), 'build', 'icon.ico'),
+    path.join(process.resourcesPath, 'app', 'build', 'icon.ico')
+  ];
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return undefined;
+}
+
 // ==========================================================
 // 4. CRIAÇÃO DA JANELA PRINCIPAL
 // ==========================================================
 function createWindow() {
   try {
     const preload = resolvePreloadPath();
+    const appIcon = resolveAppIcon();
 
     mainWindow = new BrowserWindow({
       width: 1240,
@@ -117,6 +133,7 @@ function createWindow() {
       backgroundColor: '#1E1E1E',
       frame: true,
       title: 'Arduino Turbo IDE',
+      icon: appIcon,
       webPreferences: {
         preload,
         nodeIntegration: false,
@@ -125,6 +142,7 @@ function createWindow() {
         spellcheck: false
       }
     });
+
 
     nativeSerial.on('data', (text: string) => {
       if (mainWindow && !mainWindow.isDestroyed()) {

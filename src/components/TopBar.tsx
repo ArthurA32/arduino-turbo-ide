@@ -87,12 +87,27 @@ export const TopBar: React.FC<TopBarProps> = ({
   return (
     <header className="h-13 bg-[#131318] border-b border-[#242430] flex items-center justify-between px-3 text-xs z-30 relative select-none shadow-md overflow-x-auto no-scrollbar min-w-0">
       
-      {/* 1. GRUPO ESQUERDO: AÇÕES DE COMPILAÇÃO, GRAVAÇÃO E SELEÇÃO */}
+      {/* 1. GRUPO ESQUERDO: LOGO, COMPILAÇÃO, GRAVAÇÃO E SELEÇÃO */}
       <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
         
+        {/* Logotipo Oficial */}
+        <div className="flex items-center gap-2 pr-1.5 shrink-0 select-none">
+          <img 
+            src="/icon.png" 
+            alt="Logo" 
+            className="w-6 h-6 rounded-lg shadow-sm border border-cyan-500/30 object-cover"
+          />
+          <span className="font-extrabold text-[12px] tracking-wider bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400 bg-clip-text text-transparent hidden md:inline">
+            TURBO IDE
+          </span>
+        </div>
+
+        <div className="h-5 w-[1px] bg-[#2A2A3A] mr-0.5 shrink-0" />
+
         {/* Botão Verificar / Compilar */}
         <button
           onClick={onCompile}
+
           disabled={isCompiling || isUploading || isExportingBinary || isReadingFirmware}
           title="Verificar / Compilar Código (Ctrl+R)"
           className={`flex items-center gap-1.5 h-8 px-3 rounded-lg font-semibold text-white transition-all shadow-sm shrink-0 whitespace-nowrap ${
