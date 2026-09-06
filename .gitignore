@@ -1,0 +1,17 @@
+# Dependências
+node_modules/
+
+# Builds de frontend e Electron
+dist/
+dist-electron/
+release/
+
+# Builds temporários do Arduino CLI
+arduino_turbo_build_*
+*.log
+*.tmp
+
+# Arquivos de ambiente e SO
+.DS_Store
+Thumbs.db
+*.swp

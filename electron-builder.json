@@ -1,0 +1,22 @@
+{
+  "appId": "com.antigravity.arduino-arm-turbo-ide",
+  "productName": "Arduino Turbo IDE",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "dist-electron/**/*",
+    "bin/**/*"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "dir",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "requestedExecutionLevel": "asInvoker"
+  },
+  "asar": false
+}
