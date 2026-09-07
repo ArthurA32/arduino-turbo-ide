@@ -16,7 +16,7 @@ try {
 } catch {}
 
 const args = process.argv.slice(2);
-let targetArchArg = 'all';
+let targetArchArg = 'arm64';
 
 for (const arg of args) {
   if (arg.startsWith('--arch=')) {
