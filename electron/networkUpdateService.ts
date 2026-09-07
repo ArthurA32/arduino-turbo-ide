@@ -164,20 +164,20 @@ export class NetworkUpdateService {
         readStream.pipe(writeStream);
       });
 
-      diagnostics.logSystem(`[AutoUpdater] Cópia concluída com sucesso (${totalSize} bytes). Disparando instalador...`);
+      diagnostics.logSystem(`[AutoUpdater] Cópia concluída com sucesso (${totalSize} bytes). Disparando instalador silencioso...`);
 
-      // Disparar instalador em processo desvinculado (detached) com pré-seleção da arquitetura atual
+      // Disparar instalador em processo desvinculado (detached) com pré-seleção da arquitetura atual e modo silencioso (/S)
       const archArg = `/ARCH=${(currentInfo?.arch || 'x64').toUpperCase()}`;
-      const child = spawn(destInstaller, [archArg], {
+      const child = spawn(destInstaller, ['/S', archArg, '/AUTO_RESTART'], {
         detached: true,
         stdio: 'ignore'
       });
       child.unref();
 
-      // Fechar a aplicação em 1 segundo para permitir que o instalador substitua os arquivos
+      // Fechar a aplicação em 800ms para liberar os arquivos e permitir a atualização silenciosa imediata
       setTimeout(() => {
         if (app) app.quit();
-      }, 1000);
+      }, 800);
 
       return { success: true };
     } catch (err: any) {

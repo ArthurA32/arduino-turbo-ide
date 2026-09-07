@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Sparkles,
@@ -68,7 +68,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
         setErrorMessage(res.error || 'Falha desconhecida ao iniciar instalador.');
         setIsUpdating(false);
       } else {
-        setStatusMessage('Instalador iniciado! Reiniciando a aplicação...');
+        setStatusMessage('Instalação silenciosa em andamento! O Turbo IDE será reiniciado automaticamente...');
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Erro inesperado na atualização.');
@@ -98,12 +98,12 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                Atualização Disponível
+                Atualização Silenciosa Disponível
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                   {currentInfo?.arch?.toUpperCase() || 'ARM64'}
                 </span>
               </h2>
-              <p className="text-xs text-gray-400">Servidor Local Conectado</p>
+              <p className="text-xs text-gray-400">Servidor Local Conectado (1-Click Update)</p>
             </div>
           </div>
           {!isUpdating && (
@@ -163,9 +163,9 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
               O que há de novo neste update:
             </div>
             <ul className="list-disc list-inside space-y-1 text-gray-400 text-[11px] pl-1">
-              <li>Instalador nativo automático (.exe) integrado sem necessidade de descompactar pastas.</li>
-              <li>Sistema inteligente de atualização contínua diretamente pelo servidor local mapeado.</li>
-              <li>Compilação e upload de sketches acelerados para processadores ARM64 e x64.</li>
+              <li><strong className="text-cyan-300">Atualização 100% Silenciosa:</strong> Sem janelas ou assistentes de instalação. Arquivos substituídos em background.</li>
+              <li><strong className="text-cyan-300">Reinício Automático:</strong> O Turbo IDE reabre sozinho na versão atualizada em segundos.</li>
+              <li>Preservação intacta de atalhos, ícones e configurações do usuário.</li>
             </ul>
           </div>
 

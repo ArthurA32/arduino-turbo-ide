@@ -11,7 +11,7 @@ const desktopDir = path.join(os.homedir(), 'Desktop');
 const releaseDir = path.join(projectRoot, 'release');
 
 const versionConfigPath = path.join(projectRoot, 'src', 'version.json');
-let versionConfig = { arm64: { version: '0.1.6', build: 16 }, x64: { version: '0.1.4', build: 14 } };
+let versionConfig = { arm64: { version: '0.1.7', build: 17 }, x64: { version: '0.1.5', build: 15 } };
 if (fs.existsSync(versionConfigPath)) {
   try {
     versionConfig = JSON.parse(fs.readFileSync(versionConfigPath, 'utf-8'));

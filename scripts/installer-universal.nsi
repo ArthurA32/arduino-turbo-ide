@@ -49,6 +49,7 @@ Var Hwnd_Descx64
 Var Hwnd_InfoBox
 Var SelectedArch
 Var DetectedArch
+Var AutoRestart
 
 ; Configuracoes da interface
 !define MUI_ABORTWARNING
@@ -112,6 +113,13 @@ Function .onInit
       StrCpy $SelectedArch "x64"
     ${EndIf}
   ${EndIf}
+
+  ; Checar se foi passado parametro /AUTO_RESTART na linha de comando
+  ${GetParameters} $R0
+  ${GetOptions} $R0 "/AUTO_RESTART" $R1
+  ${If} $R1 != ""
+    StrCpy $AutoRestart "1"
+  ${EndIf}
 FunctionEnd
 
 Function ArchSelectionPage
@@ -171,7 +179,7 @@ Section "Instalar" SEC01
   ; 1. Fechar qualquer instancia em execucao para prevenir lock de arquivos
   DetailPrint "Fechando eventuais instancias ativas do aplicativo..."
   ExecWait 'taskkill /F /IM "Arduino Turbo IDE.exe" /T'
-  Sleep 500
+  Sleep 1500
 
   SetOutPath "$INSTDIR"
 
@@ -209,6 +217,19 @@ Section "Instalar" SEC01
   WriteRegStr HKCU "${UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegDWORD HKCU "${UNINST_KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${UNINST_KEY}" "NoRepair" 1
+
+  ; 6. Se solicitado auto-restart ou se for instalacao silenciosa (/S), reabrir o aplicativo
+  ${If} $AutoRestart == "1"
+    DetailPrint "Reiniciando aplicacao atualizada..."
+    Sleep 1000
+    ExecShell "open" "$INSTDIR\Arduino Turbo IDE.exe"
+  ${Else}
+    IfSilent 0 not_silent_restart
+      DetailPrint "Reiniciando aplicacao atualizada silenciosamente..."
+      Sleep 1000
+      ExecShell "open" "$INSTDIR\Arduino Turbo IDE.exe"
+    not_silent_restart:
+  ${EndIf}
 SectionEnd
 
 ; ==============================================================================
