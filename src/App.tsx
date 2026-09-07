@@ -51,6 +51,12 @@ export const App: React.FC = () => {
     }
   });
 
+  const [activeProcessStep, setActiveProcessStep] = useState<number>(0);
+  const [totalProcessSteps, setTotalProcessSteps] = useState<number>(4);
+  const [processName, setProcessName] = useState<string>('Ocioso');
+  const [processPercentage, setProcessPercentage] = useState<number>(0);
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const isUploadingRef = useRef<boolean>(false);
   useEffect(() => {
     isUploadingRef.current = isUploading;
@@ -62,7 +68,7 @@ export const App: React.FC = () => {
 
   const [logs, setLogs] = useState<{ type: string; text: string }[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(true);
-  const [drawerTab, setDrawerTab] = useState<'console' | 'serial' | 'plotter'>('console');
+  const [drawerTab, setDrawerTab] = useState<'console' | 'serial' | 'plotter' | 'processos'>('console');
 
   const [isReportModalOpen, setIsReportModalOpen] = useState<boolean>(false);
   const [isCoreModalOpen, setIsCoreModalOpen] = useState<boolean>(false);
@@ -101,7 +107,7 @@ export const App: React.FC = () => {
     // 3. Checar status do CLI e cores instalados
     refreshCliStatus();
 
-    // 4. Ouvir logs em tempo real e extrair uso de memória (Flash e RAM) e progresso de Upload
+    // 4. Ouvir logs em tempo real e extrair uso de memória (Flash e RAM) e progresso de Upload/Processos
     const unsubLogs = window.electronAPI.onLogOutput((data) => {
       setLogs((prev) => [...prev, data]);
 
@@ -117,52 +123,43 @@ export const App: React.FC = () => {
         setRamUsage(ramMatch[1]);
       }
 
-      // Parse dinâmico de progresso de gravação Flash (esptool e avrdude)
       const text = data.text;
-      if (data.type === 'upload' || isUploadingRef.current) {
-        if (/Connecting\.\.\./i.test(text)) {
-          setUploadStatusText('Conectando à placa via Serial...');
-          setUploadProgress((prev) => (prev === null || prev < 5 ? 5 : prev));
-        } else if (/Erasing flash/i.test(text)) {
-          setUploadStatusText('Apagando setores da Flash...');
-          setUploadProgress((prev) => (prev === null || prev < 15 ? 15 : prev));
-        } else if (/Writing at 0x/i.test(text) || /\b\d{1,3}\s*%/i.test(text)) {
-          // Captura porcentagens do esptool (ex: Writing at 0x00010000... (42 %))
-          const espMatches = [...text.matchAll(/(?:Writing at 0x[0-9a-fA-F]+\.\.\.\s*\(|\()(\d{1,3})\s*%\)/gi)];
-          if (espMatches.length > 0) {
-            const lastPct = parseInt(espMatches[espMatches.length - 1][1], 10);
-            if (!isNaN(lastPct) && lastPct >= 0 && lastPct <= 100) {
-              setUploadProgress(lastPct);
-              setUploadStatusText(`Gravando na memória Flash (${lastPct}%)...`);
-            }
-          } else {
-            // Captura porcentagens do avrdude (ex: Writing | ####### | 45%)
-            const avrMatches = [...text.matchAll(/Writing\s*\|\s*#*\s*\|\s*(\d{1,3})%/gi)];
-            if (avrMatches.length > 0) {
-              const lastPct = parseInt(avrMatches[avrMatches.length - 1][1], 10);
-              if (!isNaN(lastPct) && lastPct >= 0 && lastPct <= 100) {
-                setUploadProgress(lastPct);
-                setUploadStatusText(`Gravando Flash AVR (${lastPct}%)...`);
-              }
-            } else {
-              // Genérico
-              const genericMatches = [...text.matchAll(/\b(\d{1,3})\s*%/g)];
-              if (genericMatches.length > 0 && text.toLowerCase().includes('writing')) {
-                const lastPct = parseInt(genericMatches[genericMatches.length - 1][1], 10);
-                if (!isNaN(lastPct) && lastPct >= 0 && lastPct <= 100) {
-                  setUploadProgress(lastPct);
-                  setUploadStatusText(`Gravando Flash (${lastPct}%)...`);
-                }
-              }
-            }
+
+      // Atualização inteligente do monitor de processos em tempo real
+      if (text.includes('[COMPILAÇÃO TURBO]')) {
+        setActiveProcessStep((prev) => (prev <= 2 ? 2 : prev));
+        setProcessName('Compilação paralela C++ (Threads ativas)');
+        setProcessPercentage((p) => Math.max(p, 28));
+      } else if (text.includes('Compiling libraries') || text.includes('Compiling core')) {
+        setProcessName('Compilando bibliotecas e Core');
+        setProcessPercentage((p) => Math.max(p, 48));
+      } else if (text.includes('Linking everything together')) {
+        setProcessName('Linkando binário e gerando imagem Flash');
+        setProcessPercentage((p) => Math.max(p, 65));
+      } else if (text.includes('Connecting...') || (data.type === 'upload' && text.includes('Connecting'))) {
+        if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+        setActiveProcessStep(3);
+        setProcessName('Conectando ao chip via Serial (Bootloader)');
+        setProcessPercentage(72);
+      } else if (text.includes('Erasing flash')) {
+        setActiveProcessStep(3);
+        setProcessName('Apagando setores da memória Flash (3MB)');
+        setProcessPercentage(80);
+      } else if (text.includes('Writing at') || (data.type === 'upload' && /\b\d{1,3}\s*%/i.test(text))) {
+        setActiveProcessStep(4);
+        setProcessName('Gravando blocos na memória Flash');
+        const espMatch = text.match(/(?:Writing at 0x[0-9a-fA-F]+\.\.\.\s*\(|\()(\d{1,3})\s*%\)/i);
+        if (espMatch) {
+          const rawPct = parseInt(espMatch[1], 10);
+          if (!isNaN(rawPct)) {
+            const overallPct = 80 + Math.floor(rawPct * 0.19);
+            setProcessPercentage(Math.min(99, overallPct));
           }
-        } else if (/Hash of data verified|flash verified|Leaving\.\.\./i.test(text)) {
-          setUploadProgress(100);
-          setUploadStatusText('Flash gravada com sucesso (100%)');
-        } else if (/Hard resetting/i.test(text)) {
-          setUploadProgress(100);
-          setUploadStatusText('Reiniciando microcontrolador...');
         }
+      } else if (text.includes('Hash of data verified') || text.includes('Leaving...')) {
+        setActiveProcessStep(4);
+        setProcessName('Flash gravada e verificada com sucesso!');
+        setProcessPercentage(100);
       }
     });
 
@@ -290,8 +287,13 @@ export const App: React.FC = () => {
       return;
     }
 
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     const targetFqbn = getEffectiveFqbn(selectedBoard.fqbn);
     setIsCompiling(true);
+    setActiveProcessStep(1);
+    setTotalProcessSteps(2);
+    setProcessName('Indexando arquivos e dependências');
+    setProcessPercentage(15);
     setStatusMessage('Indexando e compilando arquivos...');
     setDrawerTab('console');
     setIsDrawerOpen(true);
@@ -303,18 +305,42 @@ export const App: React.FC = () => {
       }
     ]);
 
+    progressTimerRef.current = setInterval(() => {
+      setProcessPercentage((prev) => {
+        if (prev < 88) return prev + Math.floor(Math.random() * 3 + 2);
+        return prev;
+      });
+    }, 600);
+
     try {
       const mainFile = files.find((f) => f.isMain) || files[0];
       const payload = files.map((f) => ({ name: f.name, content: f.content }));
       const result = await window.electronAPI.compileSketch(mainFile.content, targetFqbn, payload);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
       if (result.success) {
+        setActiveProcessStep(2);
+        setProcessName('✔ Compilação concluída com sucesso!');
+        setProcessPercentage(100);
         setStatusMessage('✔ Compilação concluída com sucesso!');
+        setTimeout(() => {
+          setActiveProcessStep(0);
+          setProcessName('Ocioso');
+          setProcessPercentage(0);
+        }, 3000);
       } else {
+        setProcessName('❌ Erro na compilação');
         setStatusMessage('❌ Erro na compilação.');
+        setTimeout(() => {
+          setActiveProcessStep(0);
+          setProcessName('Ocioso');
+          setProcessPercentage(0);
+        }, 4000);
       }
     } catch (err: any) {
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
       setLogs((prev) => [...prev, { type: 'error', text: `❌ Erro inesperado: ${err.message}` }]);
       setStatusMessage('❌ Erro inesperado.');
+      setProcessName('❌ Erro inesperado');
     } finally {
       setIsCompiling(false);
     }
@@ -331,10 +357,13 @@ export const App: React.FC = () => {
       return;
     }
 
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     const targetFqbn = getEffectiveFqbn(selectedBoard.fqbn);
     setIsUploading(true);
-    setUploadProgress(0);
-    setUploadStatusText('Iniciando gravação Flash...');
+    setActiveProcessStep(1);
+    setTotalProcessSteps(4);
+    setProcessName('Preparando particionamento (Huge App 3MB)');
+    setProcessPercentage(10);
     setStatusMessage('Gravando sketch na memória Flash...');
     setDrawerTab('console');
     setIsDrawerOpen(true);
@@ -346,6 +375,19 @@ export const App: React.FC = () => {
       }
     ]);
 
+    setTimeout(() => {
+      setActiveProcessStep(2);
+      setProcessName('Compilando C++ e dependências');
+      setProcessPercentage(22);
+    }, 400);
+
+    progressTimerRef.current = setInterval(() => {
+      setProcessPercentage((prev) => {
+        if (prev < 68) return prev + Math.floor(Math.random() * 3 + 1);
+        return prev;
+      });
+    }, 700);
+
     try {
       const mainFile = files.find((f) => f.isMain) || files[0];
       const payload = files.map((f) => ({ name: f.name, content: f.content }));
@@ -355,25 +397,31 @@ export const App: React.FC = () => {
         selectedPort,
         payload
       );
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
       if (success) {
-        setUploadProgress(100);
-        setUploadStatusText('✔ Flash gravada com sucesso! (100%)');
+        setActiveProcessStep(4);
+        setProcessName('✔ Gravação concluída com sucesso!');
+        setProcessPercentage(100);
         setStatusMessage('✔ Gravação concluída! Pronto para monitorar.');
         setTimeout(() => {
           setDrawerTab('serial');
         }, 1500);
+        setTimeout(() => {
+          setActiveProcessStep(0);
+          setProcessName('Ocioso');
+          setProcessPercentage(0);
+        }, 3000);
       } else {
+        setProcessName('❌ Erro na gravação');
         setStatusMessage('❌ Erro na gravação.');
       }
     } catch (err: any) {
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
       setLogs((prev) => [...prev, { type: 'error', text: `❌ Erro no envio: ${err.message}` }]);
       setStatusMessage('❌ Erro no envio.');
+      setProcessName('❌ Erro no envio');
     } finally {
-      setTimeout(() => {
-        setIsUploading(false);
-        setUploadProgress(null);
-        setUploadStatusText('');
-      }, 1500);
+      setIsUploading(false);
     }
   };
 
@@ -572,7 +620,7 @@ export const App: React.FC = () => {
         />
       </div>
 
-      {/* Gaveta Inferior Modulável (Console, Serial Monitor & Plotter Gráfico) */}
+      {/* Gaveta Inferior Modulável (Console, Serial Monitor, Plotter & Processos) */}
       <ConsoleDrawer
         logs={logs}
         onClearLogs={() => setLogs([])}
@@ -584,6 +632,12 @@ export const App: React.FC = () => {
         setSelectedPort={handlePortChange}
         ports={ports}
         isUploading={isUploading}
+        isCompiling={isCompiling}
+        selectedBoard={selectedBoard}
+        activeProcessStep={activeProcessStep}
+        totalProcessSteps={totalProcessSteps}
+        processName={processName}
+        processPercentage={processPercentage}
       />
 
       {/* Barra de Status e Progresso de Indexação/Memória */}
@@ -595,9 +649,15 @@ export const App: React.FC = () => {
         flashUsage={flashUsage}
         ramUsage={ramUsage}
         statusMessage={statusMessage}
-        uploadProgress={uploadProgress}
-        uploadStatusText={uploadStatusText}
         partitionSchemeLabel={partitionSchemeLabel}
+        activeProcessStep={activeProcessStep}
+        totalProcessSteps={totalProcessSteps}
+        processName={processName}
+        processPercentage={processPercentage}
+        onOpenProcessesDrawer={() => {
+          setDrawerTab('processos');
+          setIsDrawerOpen(true);
+        }}
       />
 
       {/* Modais */}

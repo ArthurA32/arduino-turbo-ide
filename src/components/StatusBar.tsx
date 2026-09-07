@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Usb, CheckCircle2, AlertCircle, Loader2, HardDrive, Database, Layers } from 'lucide-react';
+import { Cpu, Usb, CheckCircle2, AlertCircle, Loader2, HardDrive, Database, Layers, Activity } from 'lucide-react';
 
 interface StatusBarProps {
   isCompiling: boolean;
@@ -9,9 +9,12 @@ interface StatusBarProps {
   flashUsage?: string;
   ramUsage?: string;
   statusMessage?: string;
-  uploadProgress?: number | null;
-  uploadStatusText?: string;
   partitionSchemeLabel?: string;
+  activeProcessStep?: number;
+  totalProcessSteps?: number;
+  processName?: string;
+  processPercentage?: number;
+  onOpenProcessesDrawer?: () => void;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -22,13 +25,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   flashUsage,
   ramUsage,
   statusMessage,
-  uploadProgress,
-  uploadStatusText,
-  partitionSchemeLabel
+  partitionSchemeLabel,
+  activeProcessStep,
+  totalProcessSteps,
+  processName,
+  processPercentage,
+  onOpenProcessesDrawer
 }) => {
   return (
     <footer className="h-6 bg-[#16161D] border-t border-[#2B2B36] flex items-center justify-between px-3 text-[11px] text-gray-400 select-none z-30 font-sans">
-      {/* Lado Esquerdo: Placa e Porta Selecionadas */}
+      {/* Lado Esquerdo: Placa, Porta e Processos Ativos */}
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1 text-gray-300">
           <Cpu className="w-3 h-3 text-[#00B4B9]" />
@@ -41,9 +47,41 @@ export const StatusBar: React.FC<StatusBarProps> = ({
           <Usb className={`w-3 h-3 ${selectedPort ? 'text-green-400' : 'text-gray-500'}`} />
           <span>{selectedPort ? selectedPort : 'Sem Porta'}</span>
         </div>
+
+        {/* Indicador de Processos em Tempo Real (ao lado da porta selecionada) */}
+        <button
+          onClick={onOpenProcessesDrawer}
+          className={`flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono transition-all border ${
+            isUploading || isCompiling
+              ? 'bg-[#121E2C] border-cyan-500/50 text-cyan-300 hover:bg-[#162638] shadow-sm cursor-pointer'
+              : 'bg-[#161622] border-[#2B2B38] text-gray-400 hover:text-gray-300 hover:border-gray-600 cursor-pointer'
+          }`}
+          title={
+            isCompiling || isUploading
+              ? `Processo ${activeProcessStep || 1}/${totalProcessSteps || 4}: ${processName || 'Em andamento'} (~${processPercentage || 0}%) - Clique para abrir detalhes`
+              : '0 processos pesados ativos - Clique para ver o painel de processos'
+          }
+        >
+          <Activity className={`w-3 h-3 ${isUploading || isCompiling ? 'text-[#00E5FF] animate-pulse' : 'text-gray-500'}`} />
+          {isCompiling || isUploading ? (
+            <div className="flex items-center gap-1">
+              <span className="font-semibold text-white">
+                Proc {activeProcessStep || 1}/{totalProcessSteps || 4}:
+              </span>
+              <span className="text-cyan-200 truncate max-w-[130px] md:max-w-[170px]">
+                {processName || (isCompiling ? 'Compilando' : 'Processando')}
+              </span>
+              <span className="ml-1 px-1 py-0.2 rounded bg-cyan-950/80 border border-cyan-600/40 text-cyan-300 font-bold">
+                ~{processPercentage || 0}%
+              </span>
+            </div>
+          ) : (
+            <span>0 processos ativos</span>
+          )}
+        </button>
       </div>
 
-      {/* Centro: Barra de Progresso e Indexação */}
+      {/* Centro: Barra de Progresso e Indexação (Restaurada ao estado anterior) */}
       <div className="flex items-center gap-2">
         {isCompiling ? (
           <div className="flex items-center gap-1.5 text-[#00B4B9]">
@@ -54,21 +92,11 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             </div>
           </div>
         ) : isUploading ? (
-          <div className="flex items-center gap-2 text-[#E47128]">
-            <Loader2 className="w-3 h-3 animate-spin shrink-0 text-[#FF8C38]" />
-            <span className="font-medium truncate max-w-[220px]">
-              {uploadStatusText || 'Gravando na memória Flash...'}
-            </span>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="w-28 h-2 bg-[#2B2B36] rounded-full overflow-hidden border border-[#3A2820] shadow-inner">
-                <div
-                  className="h-full bg-gradient-to-r from-[#E47128] via-[#FF8C38] to-[#00E5FF] rounded-full transition-all duration-150 ease-out shadow-sm"
-                  style={{ width: `${Math.max(uploadProgress ?? 5, 5)}%` }}
-                />
-              </div>
-              <span className="font-mono text-[10px] font-bold text-[#FF8C38] min-w-[32px] text-right">
-                {uploadProgress !== null && uploadProgress !== undefined ? `${uploadProgress}%` : '...'}
-              </span>
+          <div className="flex items-center gap-1.5 text-[#E47128]">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            <span>Gravando na memória Flash...</span>
+            <div className="w-16 h-1.5 bg-[#2B2B36] rounded-full overflow-hidden ml-1">
+              <div className="h-full bg-[#E47128] animate-pulse w-full rounded-full" />
             </div>
           </div>
         ) : statusMessage ? (
