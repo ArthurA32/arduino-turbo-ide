@@ -1,20 +1,20 @@
 {
   "arm64": {
-    "version": "0.2.7",
-    "build": 27,
+    "version": "0.2.8",
+    "build": 28,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Aba Huge App Reestilizada: Alinhamento estético e milimétrico do layout com os seletores de portas e placas, preservando 100% da identidade e paleta de cores âmbar original."
+      "Detecção Instantânea de Portas COM: Eliminação do cache rígido de 2.5s e varredura via WQL de alto desempenho (290ms), com auto-detecção imediata ao abrir o seletor e priorização automática de placas USB (Arduino/ESP32)."
     ]
   },
   "x64": {
-    "version": "0.2.4",
-    "build": 24,
+    "version": "0.2.5",
+    "build": 25,
     "target": "Windows x64",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Aba Huge App Reestilizada: Alinhamento estético e milimétrico do layout com os seletores de portas e placas, preservando 100% da identidade e paleta de cores âmbar original."
+      "Detecção Instantânea de Portas COM: Eliminação do cache rígido de 2.5s e varredura via WQL de alto desempenho (290ms), com auto-detecção imediata ao abrir o seletor e priorização automática de placas USB (Arduino/ESP32)."
     ]
   }
 }

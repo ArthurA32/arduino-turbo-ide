@@ -517,10 +517,14 @@ export const TopBar: React.FC<TopBarProps> = ({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              setPortDropdownOpen(!portDropdownOpen);
+              const nextState = !portDropdownOpen;
+              setPortDropdownOpen(nextState);
               setBoardDropdownOpen(false);
               setChipMenuOpen(false);
               setPartitionDropdownOpen(false);
+              if (nextState) {
+                onRefreshPorts();
+              }
             }}
             className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap shadow-sm active:scale-95"
           >

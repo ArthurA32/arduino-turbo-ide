@@ -147,6 +147,16 @@ export const App: React.FC = () => {
             const savedPort = localStorage.getItem('turbo_selected_port');
             if (savedPort && safePorts.some((p) => p.port === savedPort)) {
               chosenPort = savedPort;
+            } else {
+              // Se a porta salva não estiver conectada, priorizar placa USB real (Arduino / ESP32 / CH340 / CP210)
+              const devBoardPort = safePorts.find((p) => {
+                const bg = (p.boardGuess || '').toLowerCase();
+                const fn = (p.friendlyName || '').toLowerCase();
+                return bg.includes('arduino') || bg.includes('esp32') || bg.includes('ch340') || bg.includes('cp210') || bg.includes('ftdi') || fn.includes('usb');
+              });
+              if (devBoardPort) {
+                chosenPort = devBoardPort.port;
+              }
             }
           } catch {}
           setSelectedPort(chosenPort);
