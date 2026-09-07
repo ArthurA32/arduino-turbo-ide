@@ -60,8 +60,8 @@ export const CoreInstallerModal: React.FC<CoreInstallerModalProps> = ({
   const avrVersion = avrEntry ? avrEntry.match(/\(([^)]+)\)/)?.[1] || '' : '';
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#16161D] border border-[#2E2E40] rounded-xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden text-sm text-gray-200">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-[#16161D] border border-[#2E2E40] rounded-xl shadow-2xl w-full max-w-2xl flex flex-col overflow-hidden text-sm text-gray-200 animate-modalPop">
         
         {/* Cabeçalho */}
         <div className="bg-[#121217] px-5 py-3.5 border-b border-[#2A2A38] flex items-center justify-between">

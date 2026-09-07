@@ -78,7 +78,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
           <div
             key={file.id}
             onClick={() => onSelectTab(file.id)}
-            className={`group flex items-center gap-2 h-7 px-3 rounded-t text-xs font-mono transition-all cursor-pointer border-t-2 ${
+            className={`group flex items-center gap-2 h-7 px-3 rounded-t text-xs font-mono transition-all duration-200 ease-out cursor-pointer border-t-2 animate-tabSlideIn ${
               isActive
                 ? 'bg-[#1E1E26] text-white border-[#00979C] shadow-sm'
                 : 'bg-[#121217] text-gray-400 hover:text-gray-200 hover:bg-[#181820] border-transparent'
@@ -93,7 +93,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
                   e.stopPropagation();
                   onCloseTab(file.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 hover:bg-red-900/50 p-0.5 rounded text-gray-400 hover:text-red-300 transition-all ml-1"
+                className="opacity-0 group-hover:opacity-100 hover:bg-red-900/50 p-0.5 rounded text-gray-400 hover:text-red-300 transition-all duration-150 ml-1"
                 title={`Fechar ${file.name}`}
               >
                 <X className="w-3 h-3" />
@@ -105,7 +105,7 @@ export const EditorTabs: React.FC<EditorTabsProps> = ({
 
       {/* Botão de Adicionar Aba */}
       {isAdding ? (
-        <div className="flex items-center gap-1 bg-[#1A1A24] border border-[#00979C] px-2 py-0.5 rounded text-xs">
+        <div className="flex items-center gap-1 bg-[#1A1A24] border border-[#00979C] px-2 py-0.5 rounded text-xs animate-tabSlideIn">
           <input
             type="text"
             placeholder="nome.h ou .cpp"

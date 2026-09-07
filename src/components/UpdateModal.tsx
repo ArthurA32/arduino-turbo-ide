@@ -136,7 +136,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fadeIn">
-      <div className="bg-[#1e1e1e] border border-cyan-500/30 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+      <div className="bg-[#1e1e1e] border border-cyan-500/30 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-modalPop">
         {/* Header com Gradiente Neon */}
         <div className="bg-gradient-to-r from-cyan-950/80 via-blue-950/60 to-[#1e1e1e] border-b border-cyan-500/20 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">

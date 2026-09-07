@@ -131,10 +131,10 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
               setActiveTab('console');
               if (!isOpen) onToggleOpen();
             }}
-            className={`flex items-center gap-1.5 px-3 h-7 text-xs font-medium rounded-t border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-3 h-7 text-xs font-medium rounded-t border-b-2 transition-all duration-150 ${
               activeTab === 'console' && isOpen
                 ? 'border-[#00979C] text-white bg-[#0F0F13]'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#181822]'
             }`}
           >
             <Code className="w-3.5 h-3.5 text-[#00B4B9]" />
@@ -147,10 +147,10 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
               setActiveTab('serial');
               if (!isOpen) onToggleOpen();
             }}
-            className={`flex items-center gap-1.5 px-3 h-7 text-xs font-medium rounded-t border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-3 h-7 text-xs font-medium rounded-t border-b-2 transition-all duration-150 ${
               activeTab === 'serial' && isOpen
                 ? 'border-[#00979C] text-white bg-[#0F0F13]'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#181822]'
             }`}
           >
             <Terminal className="w-3.5 h-3.5 text-[#E47128]" />
@@ -163,10 +163,10 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
               setActiveTab('plotter');
               if (!isOpen) onToggleOpen();
             }}
-            className={`flex items-center gap-1.5 px-3 h-7 text-xs font-medium rounded-t border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-3 h-7 text-xs font-medium rounded-t border-b-2 transition-all duration-150 ${
               activeTab === 'plotter' && isOpen
                 ? 'border-[#00979C] text-white bg-[#0F0F13]'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#181822]'
             }`}
           >
             <Activity className="w-3.5 h-3.5 text-[#66BB6A]" />
@@ -179,10 +179,10 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
               setActiveTab('processos');
               if (!isOpen) onToggleOpen();
             }}
-            className={`flex items-center gap-1.5 px-3 h-7 text-xs font-medium rounded-t border-b-2 transition-colors ${
+            className={`flex items-center gap-1.5 px-3 h-7 text-xs font-medium rounded-t border-b-2 transition-all duration-150 ${
               activeTab === 'processos' && isOpen
                 ? 'border-[#00E5FF] text-white bg-[#0F0F13]'
-                : 'border-transparent text-gray-400 hover:text-gray-200'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:bg-[#181822]'
             }`}
           >
             <Cpu className="w-3.5 h-3.5 text-[#00E5FF]" />
@@ -244,7 +244,7 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
       {isOpen && (
         <div className="flex-1 overflow-hidden bg-[#0F0F13] relative">
           {/* Aba 1: Saída de Compilação & Gravação */}
-          <div className={`h-full w-full ${activeTab === 'console' ? 'flex flex-col' : 'hidden'}`}>
+          <div className={`h-full w-full ${activeTab === 'console' ? 'flex flex-col animate-tabContentFade' : 'hidden'}`}>
             <div 
               ref={consoleContainerRef}
               className="h-full p-3 overflow-y-auto font-mono text-xs select-text space-y-0.5"
@@ -284,7 +284,7 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
           </div>
 
           {/* Aba 2: Monitor Serial */}
-          <div className={`h-full w-full ${activeTab === 'serial' ? 'flex flex-col' : 'hidden'}`}>
+          <div className={`h-full w-full ${activeTab === 'serial' ? 'flex flex-col animate-tabContentFade' : 'hidden'}`}>
             <SerialTerminal 
               selectedPort={selectedPort} 
               setSelectedPort={setSelectedPort}
@@ -295,7 +295,7 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
           </div>
 
           {/* Aba 3: Plotter Gráfico Serial */}
-          <div className={`h-full w-full ${activeTab === 'plotter' ? 'flex flex-col' : 'hidden'}`}>
+          <div className={`h-full w-full ${activeTab === 'plotter' ? 'flex flex-col animate-tabContentFade' : 'hidden'}`}>
             <SerialPlotter 
               selectedPort={selectedPort} 
               setSelectedPort={setSelectedPort}
@@ -306,7 +306,7 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
           </div>
 
           {/* Aba 4: Processos do Sistema em Tempo Real */}
-          <div className={`h-full w-full p-4 overflow-y-auto ${activeTab === 'processos' ? 'flex flex-col gap-4' : 'hidden'}`}>
+          <div className={`h-full w-full p-4 overflow-y-auto ${activeTab === 'processos' ? 'flex flex-col gap-4 animate-tabContentFade' : 'hidden'}`}>
             {/* Header de Status Geral */}
             <div className="flex flex-col md:flex-row md:items-center justify-between bg-[#151520] border border-[#2B2B3E] rounded-xl p-3.5 gap-3">
               <div className="flex items-center gap-3">

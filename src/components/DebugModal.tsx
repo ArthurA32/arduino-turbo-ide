@@ -73,8 +73,8 @@ export const DebugModal: React.FC<DebugModalProps> = ({
     (selectedBoard?.fqbn?.includes('esp32') || selectedBoard?.fqbn?.includes('samd') || selectedBoard?.fqbn?.includes('rp2040'));
 
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#16161D] border border-[#2B2B36] rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden text-gray-200">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-[#16161D] border border-[#2B2B36] rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden text-gray-200 animate-modalPop">
         
         {/* Cabeçalho */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#2B2B36] bg-[#121217]">

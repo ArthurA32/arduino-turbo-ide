@@ -336,7 +336,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           {/* Menu Dropdown de Opções de Firmware */}
           {chipMenuOpen && (
-            <div className="absolute left-0 top-full mt-1.5 w-64 bg-[#14141C] border border-cyan-500/30 rounded-xl shadow-2xl z-50 p-2 backdrop-blur-md animate-in fade-in duration-150">
+            <div className="absolute left-0 top-full mt-1.5 w-64 bg-[#14141C] border border-cyan-500/30 rounded-xl shadow-2xl z-50 p-2 backdrop-blur-md animate-dropdownSlideDown">
               <button
                 onClick={() => {
                   setChipMenuOpen(false);
@@ -360,8 +360,8 @@ export const TopBar: React.FC<TopBarProps> = ({
               >
                 <Binary className="w-4 h-4 text-emerald-400 shrink-0" />
                 <div>
-                  <div className="font-bold whitespace-nowrap">Exportar Binário Compilado</div>
-                  <div className="text-[10px] text-gray-400">Salva o binário (.bin/.hex) do projeto atual</div>
+                  <div className="font-bold whitespace-nowrap">Salvar Firmware (.BIN)</div>
+                  <div className="text-[10px] text-gray-400">Exporta binário bruto para seu computador</div>
                 </div>
               </button>
             </div>
@@ -385,11 +385,11 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="max-w-[105px] sm:max-w-[130px] md:max-w-[160px] truncate font-medium">
               {selectedBoard ? selectedBoard.name : 'Selecione a Placa'}
             </span>
-            <ChevronDown className={`w-3 h-3 text-gray-400 opacity-75 shrink-0 transition-transform ${boardDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3 h-3 text-gray-400 opacity-75 shrink-0 transition-transform duration-200 ease-out ${boardDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {boardDropdownOpen && (
-            <div className="absolute left-0 top-full mt-1.5 w-84 max-w-[90vw] bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md animate-in fade-in duration-100">
+            <div className="absolute left-0 top-full mt-1.5 w-84 max-w-[90vw] bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md animate-dropdownSlideDown">
               {/* Campo de Busca Inteligente */}
               <div className="relative mb-2">
                 <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -502,11 +502,11 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="font-medium">
               {selectedPort ? selectedPort : 'Sem Porta'}
             </span>
-            <ChevronDown className={`w-3 h-3 text-gray-400 opacity-75 shrink-0 transition-transform ${portDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3 h-3 text-gray-400 opacity-75 shrink-0 transition-transform duration-200 ease-out ${portDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {portDropdownOpen && (
-            <div className="absolute left-0 top-full mt-1.5 w-80 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md animate-in fade-in duration-100">
+            <div className="absolute left-0 top-full mt-1.5 w-80 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md animate-dropdownSlideDown">
               <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#282838]">
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Portas Detectadas</span>
                 <button
@@ -570,11 +570,11 @@ export const TopBar: React.FC<TopBarProps> = ({
               <span className="font-semibold text-amber-300 lg:hidden text-[11px]">
                 3MB
               </span>
-              <ChevronDown className={`w-3 h-3 text-amber-400/80 opacity-75 shrink-0 transition-transform ${partitionDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-3 h-3 text-amber-400/80 opacity-75 shrink-0 transition-transform duration-200 ease-out ${partitionDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {partitionDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-76 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2 backdrop-blur-md animate-in fade-in duration-100">
+              <div className="absolute left-0 top-full mt-1.5 w-76 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2 backdrop-blur-md animate-dropdownSlideDown">
                 <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#282838] px-1">
                   <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">Esquema de Partição Flash</span>
                   <span className="text-[10px] text-gray-500 font-mono">ESP32</span>

@@ -52,8 +52,8 @@ export const DiagnosticsModal: React.FC<DiagnosticsModalProps> = ({ isOpen, onCl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-      <div className="bg-[#1E1E1E] border border-[#3E3E42] rounded-lg shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden text-sm">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+      <div className="bg-[#1E1E1E] border border-[#3E3E42] rounded-lg shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden text-sm animate-modalPop">
         {/* Cabeçalho do Modal */}
         <div className="bg-[#121217] px-5 py-3.5 border-b border-[#2A2A38] flex items-center justify-between">
           <div className="flex items-center gap-2.5 text-rose-400">

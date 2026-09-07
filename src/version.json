@@ -1,26 +1,26 @@
 {
   "arm64": {
-    "version": "0.2.3",
-    "build": 23,
+    "version": "0.2.4",
+    "build": 24,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Atualizador ARM64: Sincronização da versão nativa com suporte a verificação instantânea na barra superior.",
-      "Visual do Update: Título 'Atualizando Arduino Turbo IDE' e barra de progresso nativa em tempo real.",
-      "Resiliência Geral: Correção definitiva de encerramento prematuro e proteção de processos.",
-      "Performance Snapdragon: Execução e compilação otimizada para processadores ARM64 de 64 bits."
+      "Animações Fluidas de Dropdown: Abertura suave em cascata nos seletores de placas, portas COM e partições.",
+      "Abas Deslizantes Suaves: Transições animadas ao criar ou alternar arquivos no editor e abas do painel.",
+      "Modais Refinados: Efeito de desfoque de fundo (backdrop-blur) e abertura elástica suave (modalPop).",
+      "Aceleração por Hardware: Renderização fluida a 60fps sem impacto de CPU na compilação."
     ]
   },
   "x64": {
-    "version": "0.2.0",
-    "build": 20,
+    "version": "0.2.1",
+    "build": 21,
     "target": "Windows x64",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Atualizador x64: Resolução de encerramento prematuro do instalador e restauração da atualização contínua.",
-      "Visual do Update: Mensagem 'Atualizando Arduino Turbo IDE' padronizada na interface nativa.",
-      "Central de Versões: Clique no número da versão na barra superior para verificar atualizações instantaneamente.",
-      "Semver Estrito: Transição de v0.1.9 para v0.2.0 sem subversões de dois dígitos."
+      "Animações Fluidas de Dropdown: Abertura suave em cascata nos seletores de placas, portas COM e partições.",
+      "Abas Deslizantes Suaves: Transições animadas ao criar ou alternar arquivos no editor e abas do painel.",
+      "Modais Refinados: Efeito de desfoque de fundo (backdrop-blur) e abertura elástica suave (modalPop).",
+      "Aceleração por Hardware: Renderização fluida a 60fps sem impacto de CPU na compilação."
     ]
   }
 }
