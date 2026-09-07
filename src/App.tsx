@@ -63,10 +63,21 @@ export const App: React.FC = () => {
   useEffect(() => {
     // 1. Carregar lista de placas
     window.electronAPI.listBoards().then((boardList) => {
-      setBoards(boardList);
-      if (boardList.length > 0) {
-        setSelectedBoard(boardList[0]);
+      const safeList = Array.isArray(boardList) ? boardList : [];
+      setBoards(safeList);
+      if (safeList.length > 0) {
+        let chosenBoard = safeList[0];
+        try {
+          const savedFqbn = localStorage.getItem('turbo_selected_board_fqbn');
+          if (savedFqbn) {
+            const found = safeList.find((b) => b.fqbn === savedFqbn);
+            if (found) chosenBoard = found;
+          }
+        } catch {}
+        setSelectedBoard(chosenBoard);
       }
+    }).catch((err) => {
+      console.warn('Falha ao obter lista de placas:', err);
     });
 
     // 2. Carregar portas COM
@@ -97,8 +108,22 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  const handleSelectBoard = (board: any) => {
+    setSelectedBoard(board);
+    if (board?.fqbn) {
+      try {
+        localStorage.setItem('turbo_selected_board_fqbn', board.fqbn);
+      } catch {}
+    }
+  };
+
   const handlePortChange = (newPort: string) => {
     setSelectedPort(newPort);
+    if (newPort) {
+      try {
+        localStorage.setItem('turbo_selected_port', newPort);
+      } catch {}
+    }
     // Desconecta a porta serial anterior para liberar recursos e travas do SO
     window.electronAPI.disconnectSerial();
   };
@@ -107,11 +132,17 @@ export const App: React.FC = () => {
     setIsRefreshingPorts(true);
     try {
       const portList = await window.electronAPI.listPorts();
-      setPorts(portList);
-      if (portList.length > 0) {
-        if (!portList.some((p) => p.port === selectedPort)) {
-          setSelectedPort(portList[0].port);
-        }
+      const safePorts = Array.isArray(portList) ? portList : [];
+      setPorts(safePorts);
+      if (safePorts.length > 0) {
+        let chosenPort = safePorts[0].port;
+        try {
+          const savedPort = localStorage.getItem('turbo_selected_port');
+          if (savedPort && safePorts.some((p) => p.port === savedPort)) {
+            chosenPort = savedPort;
+          }
+        } catch {}
+        setSelectedPort(chosenPort);
       } else {
         setSelectedPort('');
       }
@@ -390,7 +421,7 @@ export const App: React.FC = () => {
         onReadChipFirmware={handleReadChipFirmware}
         isReadingFirmware={isReadingFirmware}
         selectedBoard={selectedBoard}
-        setSelectedBoard={setSelectedBoard}
+        setSelectedBoard={handleSelectBoard}
         boards={boards}
         selectedPort={selectedPort}
         setSelectedPort={handlePortChange}

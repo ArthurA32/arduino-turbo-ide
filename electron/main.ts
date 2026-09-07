@@ -240,8 +240,13 @@ ipcMain.handle('ports:list', async () => {
   }
 });
 
-ipcMain.handle('boards:list', () => {
-  return POPULAR_BOARDS;
+ipcMain.handle('boards:list', async () => {
+  try {
+    return await arduinoCliService.listAllBoards();
+  } catch (err: any) {
+    console.warn('Falha ao listar placas completas, usando populares:', err?.message);
+    return POPULAR_BOARDS;
+  }
 });
 
 ipcMain.handle('serial:connect', async (event, { port, baudRate }) => {

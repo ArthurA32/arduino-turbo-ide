@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Check, 
   ArrowRight, 
   Cpu, 
   Usb, 
   Terminal, 
-  Bug, 
   FolderOpen, 
   Save, 
   RefreshCw, 
   DownloadCloud, 
   ChevronDown, 
-  Zap, 
   BookOpen, 
   Binary, 
   ShieldAlert,
   Wrench,
-  Code2
+  Code2,
+  Search,
+  X
 } from 'lucide-react';
 import appLogo from '../assets/logo.png';
 
@@ -79,14 +79,95 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [portDropdownOpen, setPortDropdownOpen] = useState(false);
   const [chipMenuOpen, setChipMenuOpen] = useState(false);
   const [boardFilter, setBoardFilter] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<'Todas' | 'ESP32' | 'Arduino' | 'Outros'>('Todas');
 
-  const filteredBoards = boards.filter(b => 
-    b.name.toLowerCase().includes(boardFilter.toLowerCase()) ||
-    b.family.toLowerCase().includes(boardFilter.toLowerCase())
-  );
+  const boardDropdownRef = useRef<HTMLDivElement>(null);
+  const portDropdownRef = useRef<HTMLDivElement>(null);
+  const chipMenuRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Fechar dropdowns ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (boardDropdownRef.current && !boardDropdownRef.current.contains(event.target as Node)) {
+        setBoardDropdownOpen(false);
+      }
+      if (portDropdownRef.current && !portDropdownRef.current.contains(event.target as Node)) {
+        setPortDropdownOpen(false);
+      }
+      if (chipMenuRef.current && !chipMenuRef.current.contains(event.target as Node)) {
+        setChipMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Foco seguro ao abrir o dropdown de placas sem disparar scrolls indesejados
+  useEffect(() => {
+    if (boardDropdownOpen) {
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus({ preventScroll: true });
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      setBoardFilter('');
+    }
+  }, [boardDropdownOpen]);
+
+  // Função para normalização de busca (ignora espaços, traços, sublinhados e acentos)
+  const normalizeText = (text: string) =>
+    (text || '')
+      .toLowerCase()
+      .replace(/[\s\-_]/g, '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+  // Filtragem inteligente e resiliente
+  const filteredBoards = useMemo(() => {
+    const safeBoards = Array.isArray(boards) ? boards : [];
+    const rawFilter = boardFilter.trim().toLowerCase();
+    const normFilter = normalizeText(rawFilter);
+    const filterTokens = rawFilter.split(/\s+/).filter(Boolean);
+
+    return safeBoards.filter((b) => {
+      if (!b) return false;
+
+      // Filtro de Categoria por Família
+      const bFamily = (b.family || '').toUpperCase();
+      if (selectedCategory === 'ESP32' && !bFamily.includes('ESP32')) return false;
+      if (selectedCategory === 'Arduino' && !bFamily.includes('ARDUINO') && !bFamily.includes('AVR')) return false;
+      if (selectedCategory === 'Outros' && (bFamily.includes('ESP32') || bFamily.includes('ARDUINO') || bFamily.includes('AVR'))) return false;
+
+      if (!rawFilter) return true;
+
+      const name = (b.name || '').toLowerCase();
+      const fqbn = (b.fqbn || '').toLowerCase();
+      const family = (b.family || '').toLowerCase();
+
+      // 1. Match exato de substring
+      if (name.includes(rawFilter) || fqbn.includes(rawFilter) || family.includes(rawFilter)) {
+        return true;
+      }
+
+      // 2. Match normalizado (ex: esp32s3 -> ESP32-S3, uno -> Arduino Uno)
+      const nameNorm = normalizeText(name);
+      const fqbnNorm = normalizeText(fqbn);
+      if (nameNorm.includes(normFilter) || fqbnNorm.includes(normFilter)) {
+        return true;
+      }
+
+      // 3. Match multi-termo (todas as palavras presentes em qualquer ordem)
+      if (filterTokens.length > 1) {
+        return filterTokens.every((token) => name.includes(token) || fqbn.includes(token) || family.includes(token));
+      }
+
+      return false;
+    });
+  }, [boards, boardFilter, selectedCategory]);
 
   return (
-    <header className="h-13 bg-[#131318] border-b border-[#242430] flex items-center justify-between px-3 text-xs z-30 relative select-none shadow-md overflow-x-auto no-scrollbar min-w-0">
+    <header className="h-13 bg-[#131318] border-b border-[#242430] flex items-center justify-between px-3 text-xs z-30 relative select-none shadow-md">
       
       {/* 1. GRUPO ESQUERDO: LOGO, COMPILAÇÃO, GRAVAÇÃO E SELEÇÃO */}
       <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
@@ -98,7 +179,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             alt="Logo" 
             className="w-6 h-6 rounded-lg shadow-sm border border-cyan-500/30 object-cover"
           />
-          <span className="font-extrabold text-[12px] tracking-wider bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400 bg-clip-text text-transparent hidden md:inline">
+          <span className="font-extrabold text-[12px] tracking-wider bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400 bg-clip-text text-transparent hidden lg:inline">
             TURBO IDE
           </span>
         </div>
@@ -108,7 +189,6 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Botão Verificar / Compilar */}
         <button
           onClick={onCompile}
-
           disabled={isCompiling || isUploading || isExportingBinary || isReadingFirmware}
           title="Verificar / Compilar Código (Ctrl+R)"
           className={`flex items-center gap-1.5 h-8 px-3 rounded-lg font-semibold text-white transition-all shadow-sm shrink-0 whitespace-nowrap ${
@@ -139,7 +219,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </button>
 
         {/* GRUPO LER & DESCOMPILAR CHIP (ao lado de Carregar) */}
-        <div className="relative flex items-center shrink-0 whitespace-nowrap">
+        <div ref={chipMenuRef} className="relative flex items-center shrink-0 whitespace-nowrap">
           <div className="flex items-center rounded-lg overflow-hidden border border-cyan-500/40 shadow-sm shadow-cyan-900/20 shrink-0 whitespace-nowrap">
             <button
               onClick={onReadChipFirmware}
@@ -171,7 +251,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           {/* Menu Dropdown de Opções de Firmware */}
           {chipMenuOpen && (
-            <div className="absolute left-0 top-9 w-64 bg-[#14141C] border border-cyan-500/30 rounded-xl shadow-2xl z-50 p-2 backdrop-blur-md animate-in fade-in duration-150">
+            <div className="absolute left-0 top-full mt-1.5 w-64 bg-[#14141C] border border-cyan-500/30 rounded-xl shadow-2xl z-50 p-2 backdrop-blur-md animate-in fade-in duration-150">
               <button
                 onClick={() => {
                   setChipMenuOpen(false);
@@ -215,80 +295,146 @@ export const TopBar: React.FC<TopBarProps> = ({
           }`}
         >
           <Binary className={`w-3.5 h-3.5 text-purple-400 shrink-0 ${isExportingBinary ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline whitespace-nowrap inline-block">{isExportingBinary ? 'Exportando...' : 'Exportar Binário'}</span>
+          <span className="hidden lg:inline whitespace-nowrap inline-block">{isExportingBinary ? 'Exportando...' : 'Exportar Binário'}</span>
         </button>
 
-
-        <div className="h-5 w-[1px] bg-[#2A2A3A] mx-1 shrink-0" />
+        <div className="h-5 w-[1px] bg-[#2A2A3A] mx-0.5 shrink-0" />
 
         {/* Seletor de Placa */}
-        <div className="relative shrink-0">
+        <div ref={boardDropdownRef} className="relative shrink-0">
           <button
             onClick={() => {
               setBoardDropdownOpen(!boardDropdownOpen);
               setPortDropdownOpen(false);
+              setChipMenuOpen(false);
             }}
-            className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap"
+            className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap shadow-sm"
           >
             <Cpu className="w-3.5 h-3.5 text-[#00B4B9] shrink-0" />
-            <span className="max-w-[140px] truncate font-medium">
+            <span className="max-w-[130px] md:max-w-[170px] truncate font-medium">
               {selectedBoard ? selectedBoard.name : 'Selecione a Placa'}
             </span>
-            <ChevronDown className="w-3 h-3 text-gray-400 opacity-75 shrink-0" />
+            <ChevronDown className={`w-3 h-3 text-gray-400 opacity-75 shrink-0 transition-transform ${boardDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
-
           {boardDropdownOpen && (
-            <div className="absolute left-0 mt-1 w-72 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md">
-              <input
-                type="text"
-                placeholder="Buscar placa (ex: ESP32-C5, Uno)..."
-                value={boardFilter}
-                onChange={(e) => setBoardFilter(e.target.value)}
-                className="w-full bg-[#1C1C26] border border-[#2E2E40] rounded-lg px-2.5 py-1.5 text-xs text-white mb-2 focus:outline-none focus:border-[#00979C]"
-                autoFocus
-              />
-              <div className="max-h-60 overflow-y-auto space-y-1">
-                {filteredBoards.map((b) => (
+            <div className="absolute left-0 top-full mt-1.5 w-84 max-w-[90vw] bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md animate-in fade-in duration-100">
+              {/* Campo de Busca Inteligente */}
+              <div className="relative mb-2">
+                <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Buscar placa (ex: ESP32-C5, Uno, Wemos)..."
+                  value={boardFilter}
+                  onChange={(e) => setBoardFilter(e.target.value)}
+                  className="w-full bg-[#1C1C26] border border-[#2E2E40] rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#00979C]"
+                />
+                {boardFilter && (
                   <button
-                    key={b.fqbn}
-                    onClick={() => {
-                      setSelectedBoard(b);
-                      setBoardDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
-                      selectedBoard?.fqbn === b.fqbn 
-                        ? 'bg-[#00979C] text-white font-semibold shadow-sm' 
-                        : 'hover:bg-[#222230] text-gray-300'
+                    onClick={() => setBoardFilter('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-0.5"
+                    title="Limpar busca"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+
+              {/* Categorias Rápidas */}
+              <div className="flex items-center gap-1 mb-2 pb-1.5 border-b border-[#242434]">
+                {(['Todas', 'ESP32', 'Arduino', 'Outros'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                      selectedCategory === cat
+                        ? 'bg-[#00979C] text-white'
+                        : 'bg-[#1C1C26] text-gray-400 hover:text-white hover:bg-[#222230]'
                     }`}
                   >
-                    <span>{b.name}</span>
-                    <span className="text-[10px] opacity-60 uppercase font-mono">{b.family}</span>
+                    {cat}
                   </button>
                 ))}
+                <span className="text-[10px] text-gray-500 ml-auto font-mono">
+                  {filteredBoards.length} placas
+                </span>
               </div>
+
+              {/* Lista de Placas Filtradas */}
+              {filteredBoards.length === 0 ? (
+                <div className="py-6 px-3 text-center text-gray-400">
+                  <Cpu className="w-6 h-6 mx-auto mb-1.5 opacity-40 text-[#00B4B9]" />
+                  <div className="text-xs font-semibold text-gray-300">Nenhuma placa encontrada</div>
+                  <div className="text-[11px] text-gray-500 mt-1">
+                    Não encontramos resultados para "{boardFilter}".
+                  </div>
+                  <button
+                    onClick={() => {
+                      setBoardDropdownOpen(false);
+                      onOpenCoreModal();
+                    }}
+                    className="mt-2.5 px-3 py-1 bg-[#1E1E2A] hover:bg-[#252538] text-cyan-400 rounded-lg text-[11px] border border-cyan-500/30 transition"
+                  >
+                    Abrir Gerenciador de Cores
+                  </button>
+                </div>
+              ) : (
+                <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
+                  {filteredBoards.map((b) => {
+                    const isSelected = selectedBoard?.fqbn === b.fqbn;
+                    return (
+                      <button
+                        key={b.fqbn}
+                        onClick={() => {
+                          setSelectedBoard(b);
+                          setBoardDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                          isSelected
+                            ? 'bg-[#00979C] text-white font-semibold shadow-sm'
+                            : 'hover:bg-[#222230] text-gray-300'
+                        }`}
+                      >
+                        <div className="flex flex-col min-w-0 pr-2">
+                          <span className="truncate font-medium">{b.name}</span>
+                          <span className={`text-[10px] truncate font-mono ${isSelected ? 'text-cyan-100/70' : 'opacity-50'}`}>
+                            {b.fqbn}
+                          </span>
+                        </div>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded uppercase font-mono shrink-0 ${
+                          isSelected ? 'bg-black/20 text-white' : 'bg-[#181824] text-gray-400 border border-gray-800'
+                        }`}>
+                          {b.family}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Seletor de Porta COM */}
-        <div className="relative shrink-0">
+        <div ref={portDropdownRef} className="relative shrink-0">
           <button
             onClick={() => {
               setPortDropdownOpen(!portDropdownOpen);
               setBoardDropdownOpen(false);
+              setChipMenuOpen(false);
             }}
-            className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap"
+            className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap shadow-sm"
           >
             <Usb className={`w-3.5 h-3.5 ${selectedPort ? 'text-[#00B4B9]' : 'text-gray-400'} shrink-0`} />
             <span className="font-medium">
               {selectedPort ? selectedPort : 'Sem Porta'}
             </span>
-            <ChevronDown className="w-3 h-3 text-gray-400 opacity-75 shrink-0" />
+            <ChevronDown className={`w-3 h-3 text-gray-400 opacity-75 shrink-0 transition-transform ${portDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {portDropdownOpen && (
-            <div className="absolute left-0 mt-1 w-80 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md">
+            <div className="absolute left-0 top-full mt-1.5 w-80 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 backdrop-blur-md animate-in fade-in duration-100">
               <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#282838]">
                 <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Portas Detectadas</span>
                 <button
@@ -334,14 +480,13 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* 2. GRUPO CENTRAL: IDENTIFICAÇÃO DO PROJETO */}
-      <div className="hidden xl:flex items-center gap-1.5 text-xs text-gray-300 font-mono bg-[#181822] px-3 h-7 rounded-lg border border-[#2A2A38] shrink-0">
+      <div className="hidden 2xl:flex items-center gap-1.5 text-xs text-gray-300 font-mono bg-[#181822] px-3 h-7 rounded-lg border border-[#2A2A38] shrink-0">
         <Code2 className="w-3.5 h-3.5 text-[#00B4B9] shrink-0" />
         <span className="whitespace-nowrap">{fileName || 'sketch.ino'}</span>
       </div>
 
       {/* 3. GRUPO DIREITO: FERRAMENTAS INTEGRADAS E UTILITÁRIOS */}
       <div className="flex items-center gap-1.5 shrink-0 whitespace-nowrap">
-
         
         {/* Abrir / Salvar */}
         <div className="flex items-center bg-[#181822] border border-[#2A2A3A] rounded-lg p-0.5">
@@ -370,7 +515,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-teal-500/50 text-gray-300 hover:text-white text-xs font-medium transition-all active:scale-95"
         >
           <BookOpen className="w-3.5 h-3.5 text-teal-400" />
-          <span className="hidden md:inline">Bibliotecas</span>
+          <span className="hidden xl:inline">Bibliotecas</span>
         </button>
 
         {/* Depuração GDB & JTAG */}
@@ -380,7 +525,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-amber-500/50 text-gray-300 hover:text-white text-xs font-medium transition-all active:scale-95"
         >
           <Wrench className="w-3.5 h-3.5 text-amber-400" />
-          <span className="hidden md:inline">Depurar</span>
+          <span className="hidden xl:inline">Depurar</span>
         </button>
 
         {/* Gerenciar Cores / Drivers */}
@@ -390,7 +535,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-sky-500/50 text-gray-300 hover:text-white text-xs font-medium transition-all active:scale-95"
         >
           <DownloadCloud className="w-3.5 h-3.5 text-sky-400" />
-          <span className="hidden md:inline">Cores / Drivers</span>
+          <span className="hidden xl:inline">Cores</span>
         </button>
 
         {/* Relatório de Erros & Diagnóstico */}
@@ -400,7 +545,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-[#181822] hover:bg-[#28181E] border border-[#2A2A3A] hover:border-rose-500/50 text-gray-300 hover:text-rose-200 text-xs font-medium transition-all active:scale-95"
         >
           <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-          <span className="hidden md:inline">Diagnóstico</span>
+          <span className="hidden xl:inline">Diagnóstico</span>
         </button>
 
         <div className="h-5 w-[1px] bg-[#2A2A3A] mx-0.5" />
@@ -416,12 +561,10 @@ export const TopBar: React.FC<TopBarProps> = ({
           }`}
         >
           <Terminal className={`w-3.5 h-3.5 ${isSerialOpen ? 'text-white' : 'text-[#E47128]'}`} />
-          <span>Monitor Serial</span>
+          <span className="hidden sm:inline">Monitor Serial</span>
         </button>
 
       </div>
     </header>
   );
 };
-
-

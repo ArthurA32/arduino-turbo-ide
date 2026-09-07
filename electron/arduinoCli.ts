@@ -310,6 +310,7 @@ export const POPULAR_HEADER_MAP: { [header: string]: string } = {
 export class ArduinoCliService {
   private cliPath: string = '';
   private initialized: boolean = false;
+  private cachedBoards: BoardOption[] | null = null;
 
   constructor() {}
 
@@ -375,6 +376,88 @@ export class ArduinoCliService {
         cores: [],
         indexes: []
       };
+    }
+  }
+
+  public clearBoardsCache(): void {
+    this.cachedBoards = null;
+  }
+
+  public async listAllBoards(): Promise<BoardOption[]> {
+    if (this.cachedBoards && this.cachedBoards.length > 0) {
+      return this.cachedBoards;
+    }
+
+    const activeCli = this.getCliPath();
+    const resultBoards: BoardOption[] = [...POPULAR_BOARDS];
+    const seenFqbns = new Set<string>();
+
+    for (const pb of POPULAR_BOARDS) {
+      const parts = pb.fqbn.toLowerCase().split(':');
+      if (parts.length >= 3) {
+        seenFqbns.add(`${parts[0]}:${parts[1]}:${parts[2]}`);
+      } else {
+        seenFqbns.add(pb.fqbn.toLowerCase());
+      }
+    }
+
+    try {
+      const { stdout } = await execPromise(`"${activeCli}" board listall --format json`, {
+        maxBuffer: 30 * 1024 * 1024
+      });
+      if (stdout && stdout.trim()) {
+        const data = JSON.parse(stdout.trim());
+        const rawBoards: any[] = Array.isArray(data) ? data : (data && Array.isArray(data.boards) ? data.boards : []);
+
+        for (const item of rawBoards) {
+          if (!item || !item.fqbn || !item.name) continue;
+          const fqbn = String(item.fqbn).trim();
+          const parts = fqbn.toLowerCase().split(':');
+          const fqbnKey = parts.length >= 3 ? `${parts[0]}:${parts[1]}:${parts[2]}` : fqbn.toLowerCase();
+
+          if (seenFqbns.has(fqbnKey)) continue;
+
+          const fqbnLower = fqbn.toLowerCase();
+          let platform = 'other';
+          let family = 'Outros';
+
+          if (fqbnLower.startsWith('esp32:')) {
+            platform = 'esp32';
+            family = 'ESP32';
+          } else if (fqbnLower.startsWith('arduino:avr') || fqbnLower.startsWith('arduino:sam') || fqbnLower.startsWith('arduino:megaavr')) {
+            platform = 'avr';
+            family = 'Arduino';
+          } else if (fqbnLower.startsWith('esp8266:')) {
+            platform = 'esp8266';
+            family = 'ESP8266';
+          } else if (fqbnLower.startsWith('rp2040:')) {
+            platform = 'rp2040';
+            family = 'Raspberry Pi';
+          } else if (item.platform?.metadata?.id) {
+            const platId = String(item.platform.metadata.id).toLowerCase();
+            if (platId.includes('esp32')) {
+              platform = 'esp32';
+              family = 'ESP32';
+            } else if (platId.includes('avr') || platId.includes('arduino')) {
+              platform = 'avr';
+              family = 'Arduino';
+            }
+          }
+
+          resultBoards.push({
+            name: String(item.name).trim(),
+            fqbn,
+            platform,
+            family
+          });
+          seenFqbns.add(fqbnKey);
+        }
+      }
+      this.cachedBoards = resultBoards;
+      return resultBoards;
+    } catch (err: any) {
+      console.warn('Aviso ao listar todas as placas via CLI:', err?.message);
+      return POPULAR_BOARDS;
     }
   }
 
@@ -486,6 +569,7 @@ export class ArduinoCliService {
       child.on('close', (code) => {
         processManager.unregister(child);
         if (code === 0) {
+          this.clearBoardsCache();
           onOutput(`\n[SUCESSO] Core ${coreName} instalado com sucesso!\n`);
           resolve(true);
         } else {
