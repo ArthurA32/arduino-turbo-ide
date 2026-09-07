@@ -17,7 +17,8 @@ import {
   Code2,
   Search,
   X,
-  Layers
+  Layers,
+  Sparkles
 } from 'lucide-react';
 import appLogo from '../assets/logo.png';
 
@@ -86,10 +87,14 @@ interface TopBarProps {
   partitionScheme?: string;
   onPartitionSchemeChange?: (scheme: string) => void;
   versionInfo?: { version: string; build: number; arch: string; targetName: string; fullString: string };
+  updateInfo?: any;
+  onOpenUpdateModal?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
   versionInfo,
+  updateInfo,
+  onOpenUpdateModal,
   onCompile,
   onUpload,
   isCompiling,
@@ -242,6 +247,17 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             v{versionInfo?.version || '0.1.3'}
           </span>
+
+          {updateInfo?.available && (
+            <button
+              onClick={onOpenUpdateModal}
+              title={`Nova versão v${updateInfo?.serverInfo?.version || 'nova'} disponível no servidor local! Clique para atualizar.`}
+              className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-cyan-500/30 to-blue-500/30 text-cyan-300 border border-cyan-400/60 hover:from-cyan-500/50 hover:to-blue-500/50 transition-all animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.5)] cursor-pointer shrink-0"
+            >
+              <Sparkles className="w-3 h-3 text-cyan-400 animate-spin" />
+              <span>Update v{updateInfo?.serverInfo?.version}</span>
+            </button>
+          )}
         </div>
 
         <div className="h-5 w-[1px] bg-[#2A2A3A] mr-0.5 shrink-0" />

@@ -10,6 +10,7 @@ import { nativeSerial } from './nativeSerial';
 import { detectSystemProfile } from './systemProfile';
 import { firmwareReaderService } from './firmwareReader';
 import { getAppVersionInfo } from './version';
+import { networkUpdateService } from './networkUpdateService';
 
 
 // ==========================================================
@@ -247,6 +248,18 @@ app.whenReady().then(async () => {
       createWindow();
     }
   });
+
+  // Checagem automática em segundo plano de atualizações no servidor local após inicialização estável
+  setTimeout(async () => {
+    try {
+      const checkResult = await networkUpdateService.checkForUpdates();
+      if (checkResult.available && mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update:available', checkResult);
+      }
+    } catch (err: any) {
+      diagnostics.logSystem(`[AutoUpdater] Verificação de rotina offline ou servidor indisponível: ${err?.message}`);
+    }
+  }, 4000);
 }).catch((err) => {
   logEmergencyCrash('APP_READY_FAILED', err);
 });
@@ -565,5 +578,30 @@ ipcMain.handle('chip:patchPins', async (event, { sourceBinaryPath, pinMappings }
 ipcMain.handle('chip:flashPatched', async (event, { port, fqbn, binaryPath }) => {
   return await firmwareReaderService.flashPatchedBinary({ port, fqbn, binaryPath });
 });
+
+// ==========================================
+// 7. IPC HANDLERS: ATUALIZAÇÕES VIA REDE LOCAL
+// ==========================================
+
+ipcMain.handle('update:check', async () => {
+  try {
+    return await networkUpdateService.checkForUpdates();
+  } catch (err: any) {
+    return { available: false, error: err?.message || 'Falha ao buscar atualizações.' };
+  }
+});
+
+ipcMain.handle('update:install', async () => {
+  try {
+    return await networkUpdateService.installUpdate((progress) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update:progress', progress);
+      }
+    });
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Falha ao instalar atualização.' };
+  }
+});
+
 
 

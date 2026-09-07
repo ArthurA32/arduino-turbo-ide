@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Usb, CheckCircle2, AlertCircle, Loader2, HardDrive, Database, Layers, Activity } from 'lucide-react';
+import { Cpu, Usb, CheckCircle2, AlertCircle, Loader2, HardDrive, Database, Layers, Activity, Sparkles } from 'lucide-react';
 
 interface StatusBarProps {
   isCompiling: boolean;
@@ -16,6 +16,8 @@ interface StatusBarProps {
   processPercentage?: number;
   onOpenProcessesDrawer?: () => void;
   versionInfo?: { version: string; build: number; arch: string; targetName: string; fullString: string };
+  updateInfo?: any;
+  onOpenUpdateModal?: () => void;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -32,7 +34,9 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   processName,
   processPercentage,
   onOpenProcessesDrawer,
-  versionInfo
+  versionInfo,
+  updateInfo,
+  onOpenUpdateModal
 }) => {
   return (
     <footer className="h-6 bg-[#16161D] border-t border-[#2B2B36] flex items-center justify-between px-3 text-[11px] text-gray-400 select-none z-30 font-sans">
@@ -142,6 +146,17 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         <div className="text-[10px] text-gray-500 font-mono border-l border-[#2B2B36] pl-2">
           UTF-8
         </div>
+
+        {updateInfo?.available && (
+          <button
+            onClick={onOpenUpdateModal}
+            className="flex items-center gap-1 text-[10px] font-mono text-cyan-300 bg-cyan-500/20 hover:bg-cyan-500/30 px-1.5 py-0.5 rounded border border-cyan-400/50 animate-pulse transition-all cursor-pointer shadow-[0_0_8px_rgba(6,182,212,0.4)]"
+            title={`Nova versão v${updateInfo?.serverInfo?.version} disponível no servidor local! Clique para atualizar.`}
+          >
+            <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
+            <span>Update</span>
+          </button>
+        )}
 
         <div 
           className="text-[10px] font-mono text-cyan-400/80 border-l border-[#2B2B36] pl-2 cursor-default font-semibold"

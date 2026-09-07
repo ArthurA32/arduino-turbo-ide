@@ -8,6 +8,7 @@ import { CoreInstallerModal } from './components/CoreInstallerModal';
 import { LibraryManagerModal } from './components/LibraryManagerModal';
 import { DebugModal } from './components/DebugModal';
 import { FirmwareReaderModal, FirmwareReadData } from './components/FirmwareReaderModal';
+import { UpdateModal } from './components/UpdateModal';
 import { SketchFile } from './components/EditorTabs';
 
 
@@ -88,12 +89,33 @@ export const App: React.FC = () => {
     fullString: 'v0.1.3 [ARM64]'
   });
 
+  const [updateInfo, setUpdateInfo] = useState<any>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
+
   useEffect(() => {
     // 0. Carregar versão da aplicação e arquitetura
     if (window.electronAPI && typeof window.electronAPI.getAppVersion === 'function') {
       window.electronAPI.getAppVersion().then((info) => {
         if (info) setVersionInfo(info);
       }).catch(() => {});
+    }
+
+    // 0.1 Ouvir e verificar atualizações via rede local
+    if (window.electronAPI) {
+      if (typeof window.electronAPI.onUpdateAvailable === 'function') {
+        window.electronAPI.onUpdateAvailable((info) => {
+          if (info && info.available) {
+            setUpdateInfo(info);
+          }
+        });
+      }
+      if (typeof window.electronAPI.checkForUpdates === 'function') {
+        window.electronAPI.checkForUpdates().then((res) => {
+          if (res && res.available) {
+            setUpdateInfo(res);
+          }
+        }).catch(() => {});
+      }
     }
 
     // 1. Carregar lista de placas
@@ -617,6 +639,8 @@ export const App: React.FC = () => {
         partitionScheme={partitionScheme}
         onPartitionSchemeChange={handlePartitionSchemeChange}
         versionInfo={versionInfo}
+        updateInfo={updateInfo}
+        onOpenUpdateModal={() => setIsUpdateModalOpen(true)}
       />
 
 
@@ -674,6 +698,8 @@ export const App: React.FC = () => {
           setIsDrawerOpen(true);
         }}
         versionInfo={versionInfo}
+        updateInfo={updateInfo}
+        onOpenUpdateModal={() => setIsUpdateModalOpen(true)}
       />
 
       {/* Modais */}
@@ -712,6 +738,12 @@ export const App: React.FC = () => {
         port={selectedPort}
         boardName={selectedBoard?.name || ''}
         fqbn={selectedBoard?.fqbn}
+      />
+
+      <UpdateModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        updateInfo={updateInfo}
       />
 
     </div>

@@ -4,21 +4,36 @@
   "directories": {
     "output": "release"
   },
+  "afterPack": "./scripts/after-pack.cjs",
   "files": [
     "dist/**/*",
     "dist-electron/**/*",
-    "bin/**/*"
+    "bin/**/*",
+    "src/version.json"
+  ],
+  "extraResources": [
+    {
+      "from": "src/version.json",
+      "to": "version.json"
+    }
   ],
   "win": {
     "icon": "build/icon.ico",
     "target": [
-      {
-        "target": "dir",
-        "arch": ["x64", "arm64"]
-      }
+      "nsis",
+      "dir"
     ],
     "requestedExecutionLevel": "asInvoker"
   },
-
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Arduino Turbo IDE",
+    "artifactName": "Arduino_Turbo_IDE_Setup_${arch}.${ext}",
+    "uninstallDisplayName": "Arduino Turbo IDE"
+  },
   "asar": false
 }
