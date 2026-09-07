@@ -1,4 +1,4 @@
-﻿; ==============================================================================
+; ==============================================================================
 ; ARDUINO TURBO IDE - INSTALADOR UNIVERSAL UNIFICADO (ARM64 + X64)
 ; ==============================================================================
 
@@ -184,15 +184,21 @@ Section "Instalar" SEC01
     File /r "${PROJECT_ROOT}\release\win-unpacked\*.*"
   ${EndIf}
 
+  ; Garantir ícones oficiais na pasta resources
+  SetOutPath "$INSTDIR\resources"
+  File "${PROJECT_ROOT}\build\icon.ico"
+  File "${PROJECT_ROOT}\build\icon.png"
+  SetOutPath "$INSTDIR"
+
   ; 3. Criar desinstalador
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
   ; 4. Atalhos no Menu Iniciar e Area de Trabalho
   DetailPrint "Criando atalhos..."
   CreateDirectory "$SMPROGRAMS\Arduino Turbo IDE"
-  CreateShortCut "$SMPROGRAMS\Arduino Turbo IDE\Arduino Turbo IDE.lnk" "$INSTDIR\Arduino Turbo IDE.exe" "" "$INSTDIR\resources\icon.ico"
-  CreateShortCut "$SMPROGRAMS\Arduino Turbo IDE\Desinstalar.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe"
-  CreateShortCut "$DESKTOP\Arduino Turbo IDE.lnk" "$INSTDIR\Arduino Turbo IDE.exe" "" "$INSTDIR\resources\icon.ico"
+  CreateShortCut "$SMPROGRAMS\Arduino Turbo IDE\Arduino Turbo IDE.lnk" "$INSTDIR\Arduino Turbo IDE.exe" "" "$INSTDIR\resources\icon.ico" 0
+  CreateShortCut "$SMPROGRAMS\Arduino Turbo IDE\Desinstalar.lnk" "$INSTDIR\Uninstall.exe" "" "$INSTDIR\Uninstall.exe" 0
+  CreateShortCut "$DESKTOP\Arduino Turbo IDE.lnk" "$INSTDIR\Arduino Turbo IDE.exe" "" "$INSTDIR\resources\icon.ico" 0
 
   ; 5. Registrar no Windows (Painel de Controle / Configuracoes)
   WriteRegStr HKCU "${UNINST_KEY}" "DisplayName" "${PRODUCT_NAME} ($SelectedArch)"

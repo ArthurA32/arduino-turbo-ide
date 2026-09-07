@@ -10,13 +10,8 @@ const projectRoot = path.resolve(__dirname, '..');
 const desktopDir = path.join(os.homedir(), 'Desktop');
 const releaseDir = path.join(projectRoot, 'release');
 
-// Fechar instâncias em execução para liberar o lock de arquivos no Windows
-try {
-  execSync('taskkill /F /IM "Arduino Turbo IDE.exe" /T', { stdio: 'ignore' });
-} catch {}
-
 const versionConfigPath = path.join(projectRoot, 'src', 'version.json');
-let versionConfig = { arm64: { version: '0.1.5', build: 15 }, x64: { version: '0.1.3', build: 13 } };
+let versionConfig = { arm64: { version: '0.1.6', build: 16 }, x64: { version: '0.1.4', build: 14 } };
 if (fs.existsSync(versionConfigPath)) {
   try {
     versionConfig = JSON.parse(fs.readFileSync(versionConfigPath, 'utf-8'));

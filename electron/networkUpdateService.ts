@@ -131,6 +131,7 @@ export class NetworkUpdateService {
       return { success: false, error: check.error || 'Nenhuma atualização disponível para instalar.' };
     }
 
+    const currentInfo = check.currentInfo;
     const sourceInstaller = check.installerFullPath;
     const tempDir = os.tmpdir();
     const destInstaller = path.join(tempDir, `Arduino_Turbo_IDE_Update_${check.serverInfo?.version || 'new'}.exe`);

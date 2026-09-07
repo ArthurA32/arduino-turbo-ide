@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
@@ -44,9 +44,21 @@ module.exports = async function(context) {
     }
   }
 
-  // 4. Injetar ícone no executável via rcedit se disponível
-  const rceditExe = path.join(projectRoot, 'bin', 'tools', 'rcedit.exe');
+  // 4. Copiar icon.ico e icon.png para pasta resources
   const appIconIco = path.join(projectRoot, 'build', 'icon.ico');
+  const appIconPng = path.join(projectRoot, 'build', 'icon.png');
+  const resDir = path.join(appOutDir, 'resources');
+  fs.mkdirSync(resDir, { recursive: true });
+
+  if (fs.existsSync(appIconIco)) {
+    fs.copyFileSync(appIconIco, path.join(resDir, 'icon.ico'));
+  }
+  if (fs.existsSync(appIconPng)) {
+    fs.copyFileSync(appIconPng, path.join(resDir, 'icon.png'));
+  }
+
+  // 5. Injetar ícone no executável via rcedit se disponível
+  const rceditExe = path.join(projectRoot, 'bin', 'tools', 'rcedit.exe');
   const targetExe = path.join(appOutDir, 'Arduino Turbo IDE.exe');
 
   if (fs.existsSync(rceditExe) && fs.existsSync(appIconIco) && fs.existsSync(targetExe)) {
