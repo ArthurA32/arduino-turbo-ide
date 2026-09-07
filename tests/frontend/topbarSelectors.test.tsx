@@ -155,4 +155,43 @@ describe('TopBar - Seletores de Placas, Portas COM e Partição Flash', () => {
 
     expect(screen.getByText('Esquema de Partição Flash')).toBeDefined();
   });
+
+  it('deve disparar onCheckForUpdates ao clicar no badge do número da versão na TopBar', () => {
+    const onCheckMock = vi.fn();
+
+    render(
+      <TopBar
+        onCompile={() => {}}
+        onUpload={() => {}}
+        isCompiling={false}
+        isUploading={false}
+        onExportBinary={() => {}}
+        isExportingBinary={false}
+        onReadChipFirmware={() => {}}
+        selectedBoard={mockBoards[0]}
+        setSelectedBoard={() => {}}
+        boards={mockBoards}
+        selectedPort="COM2"
+        setSelectedPort={() => {}}
+        ports={mockPorts}
+        onRefreshPorts={() => {}}
+        isRefreshingPorts={false}
+        onOpenLibraryModal={() => {}}
+        onOpenDebugModal={() => {}}
+        onOpenReportModal={() => {}}
+        onOpenCoreModal={() => {}}
+        onOpenFile={() => {}}
+        onSaveFile={() => {}}
+        fileName="sketch.ino"
+        partitionScheme="huge_app"
+        versionInfo={{ version: '0.2.0', build: 20, arch: 'x64', targetName: 'Windows x64', fullString: 'v0.2.0 [x64]' }}
+        onCheckForUpdates={onCheckMock}
+      />
+    );
+
+    const versionBtn = screen.getByText('v0.2.0');
+    fireEvent.click(versionBtn);
+
+    expect(onCheckMock).toHaveBeenCalledTimes(1);
+  });
 });

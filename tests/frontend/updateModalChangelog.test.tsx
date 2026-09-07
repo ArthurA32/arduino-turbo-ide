@@ -97,4 +97,28 @@ describe('UpdateModal - Changelog Dinâmico e Formatação', () => {
     );
     expect(screen.queryByText(/Atualização Silenciosa Disponível/i)).toBeNull();
   });
+
+  it('deve exibir mensagem de sistema atualizado quando available for false', () => {
+    const upToDateInfo = {
+      available: false,
+      currentInfo: {
+        version: '0.2.0',
+        build: 20,
+        arch: 'x64',
+        targetName: 'Windows x64'
+      },
+      networkLocation: 'Z:\\Updates Turbo IDE'
+    };
+
+    render(
+      <UpdateModal
+        isOpen={true}
+        onClose={() => {}}
+        updateInfo={upToDateInfo}
+      />
+    );
+
+    expect(screen.getByText(/O seu aplicativo está 100% atualizado!/i)).toBeDefined();
+    expect(screen.getByText(/Entendido/i)).toBeDefined();
+  });
 });

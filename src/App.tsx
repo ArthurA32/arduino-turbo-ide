@@ -91,6 +91,26 @@ export const App: React.FC = () => {
 
   const [updateInfo, setUpdateInfo] = useState<any>(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState<boolean>(false);
+
+  const handleCheckForUpdatesManual = async () => {
+    setIsUpdateModalOpen(true);
+    setIsCheckingUpdate(true);
+    if (window.electronAPI && typeof window.electronAPI.checkForUpdates === 'function') {
+      try {
+        const res = await window.electronAPI.checkForUpdates();
+        if (res) {
+          setUpdateInfo(res);
+        }
+      } catch (err) {
+        console.error('Falha ao checar updates:', err);
+      } finally {
+        setIsCheckingUpdate(false);
+      }
+    } else {
+      setIsCheckingUpdate(false);
+    }
+  };
 
   useEffect(() => {
     // 0. Carregar versão da aplicação e arquitetura
@@ -641,6 +661,7 @@ export const App: React.FC = () => {
         versionInfo={versionInfo}
         updateInfo={updateInfo}
         onOpenUpdateModal={() => setIsUpdateModalOpen(true)}
+        onCheckForUpdates={handleCheckForUpdatesManual}
       />
 
 
@@ -745,6 +766,8 @@ export const App: React.FC = () => {
           isOpen={isUpdateModalOpen}
           onClose={() => setIsUpdateModalOpen(false)}
           updateInfo={updateInfo}
+          isChecking={isCheckingUpdate}
+          onRecheck={handleCheckForUpdatesManual}
         />
       )}
 

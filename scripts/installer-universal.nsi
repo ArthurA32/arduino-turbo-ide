@@ -54,6 +54,7 @@ Var IsUpdating
 
 ; Configuracoes da interface
 !define MUI_ABORTWARNING
+!define MUI_CUSTOMFUNCTION_GUIINIT CustomGUIInit
 
 ; 1. Pagina de Boas-Vindas
 !define MUI_PAGE_CUSTOMFUNCTION_PRE WelcomePre
@@ -143,6 +144,12 @@ Function WelcomePre
   ${EndIf}
 FunctionEnd
 
+Function CustomGUIInit
+  ${If} $IsUpdating == "1"
+    SendMessage $HWNDPARENT 0x000C 0 "STR:Atualizando ${PRODUCT_NAME}"
+  ${EndIf}
+FunctionEnd
+
 Function DirectoryPre
   ${If} $IsUpdating == "1"
     Abort
@@ -151,6 +158,8 @@ FunctionEnd
 
 Function InstFilesPre
   ${If} $IsUpdating == "1"
+    SendMessage $HWNDPARENT 0x000C 0 "STR:Atualizando ${PRODUCT_NAME}"
+    !insertmacro MUI_HEADER_TEXT "Atualizando ${PRODUCT_NAME}" "Aguarde enquanto os arquivos do sistema estão sendo atualizados..."
     SetAutoClose true
   ${EndIf}
 FunctionEnd
@@ -219,19 +228,27 @@ FunctionEnd
 ; ==============================================================================
 
 Section "Instalar" SEC01
-  ; 1. Fechar qualquer instancia em execucao para prevenir lock de arquivos
+  ; 1. Fechar qualquer instancia em execucao para prevenir lock de arquivos (sem /T para nao encerrar o proprio instalador)
   DetailPrint "Fechando eventuais instancias ativas do aplicativo..."
-  ExecWait 'taskkill /F /IM "Arduino Turbo IDE.exe" /T'
-  Sleep 1500
+  ExecWait 'taskkill /F /IM "Arduino Turbo IDE.exe"'
+  Sleep 1000
 
   SetOutPath "$INSTDIR"
 
   ; 2. Extrair arquivos conforme a arquitetura selecionada
+  ${If} $IsUpdating == "1"
+    DetailPrint "Atualizando arquivos do ${PRODUCT_NAME} ($SelectedArch)..."
+  ${EndIf}
+
   ${If} $SelectedArch == "ARM64"
-    DetailPrint "Instalando pacote nativo Windows ARM64..."
+    ${If} $IsUpdating != "1"
+      DetailPrint "Instalando pacote nativo Windows ARM64..."
+    ${EndIf}
     File /r "${PROJECT_ROOT}\release\win-arm64-unpacked\*.*"
   ${Else}
-    DetailPrint "Instalando pacote nativo Windows x64..."
+    ${If} $IsUpdating != "1"
+      DetailPrint "Instalando pacote nativo Windows x64..."
+    ${EndIf}
     File /r "${PROJECT_ROOT}\release\win-unpacked\*.*"
   ${EndIf}
 
@@ -265,13 +282,13 @@ Section "Instalar" SEC01
   ${If} $AutoRestart == "1"
     DetailPrint "Reiniciando aplicacao atualizada..."
     Sleep 1000
-    ExecShell "open" "$INSTDIR\Arduino Turbo IDE.exe"
+    Exec '"$INSTDIR\Arduino Turbo IDE.exe"'
   ${Else}
     IfSilent do_silent_restart skip_silent_restart
     do_silent_restart:
       DetailPrint "Reiniciando aplicacao atualizada silenciosamente..."
       Sleep 1000
-      ExecShell "open" "$INSTDIR\Arduino Turbo IDE.exe"
+      Exec '"$INSTDIR\Arduino Turbo IDE.exe"'
     skip_silent_restart:
   ${EndIf}
 SectionEnd

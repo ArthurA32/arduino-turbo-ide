@@ -5,22 +5,22 @@
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Modal de Atualização: Correção definitiva da chamada de hooks do React 19 (eliminado Minified React error #310).",
-      "Quality Gate & CI: Pipeline automatizado de testes em 3 camadas com bloqueio estrito de falhas.",
-      "Seletores TopBar: Correção no corte de overflow dos menus de Placas, Portas COM e Esquema de Partição Flash (Huge App).",
-      "Progresso Nativo: Janela com barra de progresso em tempo real durante a instalação /UPDATE."
+      "Atualizador x64: Resolução de encerramento prematuro do instalador e restauração da atualização contínua.",
+      "Visual do Update: Mensagem 'Atualizando Arduino Turbo IDE' padronizada na interface nativa.",
+      "Central de Versões: Clique no número da versão na barra superior para verificar atualizações instantaneamente.",
+      "Semver Estrito: Transição de v0.1.9 para v0.2.0 sem subversões de dois dígitos."
     ]
   },
   "x64": {
-    "version": "0.1.9",
-    "build": 19,
+    "version": "0.2.0",
+    "build": 20,
     "target": "Windows x64",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Modal de Atualização: Correção definitiva da chamada de hooks do React 19 (eliminado Minified React error #310).",
-      "Quality Gate & CI: Pipeline automatizado de testes em 3 camadas com bloqueio estrito de falhas.",
-      "Seletores TopBar: Correção no corte de overflow dos menus de Placas, Portas COM e Esquema de Partição Flash (Huge App).",
-      "Progresso Nativo: Janela com barra de progresso em tempo real durante a instalação /UPDATE."
+      "Atualizador x64: Resolução de encerramento prematuro do instalador e restauração da atualização contínua.",
+      "Visual do Update: Mensagem 'Atualizando Arduino Turbo IDE' padronizada na interface nativa.",
+      "Central de Versões: Clique no número da versão na barra superior para verificar atualizações instantaneamente.",
+      "Semver Estrito: Transição de v0.1.9 para v0.2.0 sem subversões de dois dígitos."
     ]
   }
 }

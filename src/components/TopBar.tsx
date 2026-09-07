@@ -89,12 +89,14 @@ interface TopBarProps {
   versionInfo?: { version: string; build: number; arch: string; targetName: string; fullString: string };
   updateInfo?: any;
   onOpenUpdateModal?: () => void;
+  onCheckForUpdates?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
   versionInfo,
   updateInfo,
   onOpenUpdateModal,
+  onCheckForUpdates,
   onCompile,
   onUpload,
   isCompiling,
@@ -241,12 +243,14 @@ export const TopBar: React.FC<TopBarProps> = ({
           <span className="font-extrabold text-[12px] tracking-wider bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400 bg-clip-text text-transparent hidden sm:inline">
             TURBO IDE
           </span>
-          <span 
-            className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 shrink-0 hidden md:inline shadow-sm"
-            title={`Arduino Turbo IDE v${versionInfo?.version || '0.1.3'} [${versionInfo?.arch === 'arm64' ? 'ARM64 Nativo' : 'x64'}] - Build #${versionInfo?.build || 13}`}
+          <button 
+            type="button"
+            onClick={onCheckForUpdates || onOpenUpdateModal}
+            className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-950/80 hover:bg-cyan-900/90 text-cyan-300 hover:text-cyan-100 border border-cyan-500/40 hover:border-cyan-400 shrink-0 hidden md:inline shadow-sm cursor-pointer transition-all hover:scale-105 active:scale-95"
+            title={`Arduino Turbo IDE v${versionInfo?.version || '0.1.3'} [${versionInfo?.arch === 'arm64' ? 'ARM64 Nativo' : 'x64'}] - Clique para verificar atualizações no servidor local`}
           >
             v{versionInfo?.version || '0.1.3'}
-          </span>
+          </button>
 
           {updateInfo?.available && (
             <button
