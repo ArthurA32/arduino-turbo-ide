@@ -142,14 +142,44 @@ function createWindow() {
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: false,
-        spellcheck: false
+        spellcheck: false,
+        backgroundThrottling: false
       }
     });
 
+    mainWindow.on('restore', () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('window:restored');
+      }
+    });
+
+    // Fila inteligente com loteamento de IPC para evitar travamento ao receber fluxo serial pesado
+    let pendingSerialLines: string[] = [];
+    let serialIpcTimer: NodeJS.Timeout | null = null;
+
+    const flushSerialIpc = () => {
+      serialIpcTimer = null;
+      if (pendingSerialLines.length === 0 || !mainWindow || mainWindow.isDestroyed()) {
+        pendingSerialLines = [];
+        return;
+      }
+      const toSend = pendingSerialLines;
+      pendingSerialLines = [];
+      mainWindow.webContents.send('serial:data', toSend.join('\n'));
+    };
 
     nativeSerial.on('data', (text: string) => {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('serial:data', text);
+      if (!mainWindow || mainWindow.isDestroyed()) return;
+
+      pendingSerialLines.push(text);
+
+      // Proteção contra estouro de memória no processo principal
+      if (pendingSerialLines.length > 3000) {
+        pendingSerialLines = pendingSerialLines.slice(-1500);
+      }
+
+      if (!serialIpcTimer) {
+        serialIpcTimer = setTimeout(flushSerialIpc, 20); // ~50 FPS
       }
     });
 

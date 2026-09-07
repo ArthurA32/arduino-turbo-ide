@@ -46,8 +46,12 @@ export class NativeSerialService extends EventEmitter {
       }
     }
 
-    // Se sobrou algum texto parcial sem quebra de linha (ex: Serial.print sem ln), descarrega após 40ms
-    if (this.lineBuffer.length > 0) {
+    // Se o buffer ficar excessivamente grande sem quebras de linha (ex: streaming binário contínuo)
+    if (this.lineBuffer.length > 32768) {
+      this.emit('data', this.lineBuffer);
+      diagnostics.logSerial(this.lineBuffer);
+      this.lineBuffer = '';
+    } else if (this.lineBuffer.length > 0) {
       this.flushTimer = setTimeout(() => {
         if (this.lineBuffer.length > 0) {
           this.emit('data', this.lineBuffer);

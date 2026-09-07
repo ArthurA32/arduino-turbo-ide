@@ -88,39 +88,62 @@ export const SerialTerminal: React.FC<SerialTerminalProps> = ({
     }
   }, [isActiveTab, autoScroll, scrollToBottom]);
 
-  // Descarrega o lote de logs via requestAnimationFrame para alta performance a 60 FPS
+  // Descarrega o lote de logs de forma segura e com limite estrito para nunca travar a UI
   const flushLogsBatch = useCallback(() => {
     isRafScheduledRef.current = false;
     const batch = pendingLogsRef.current;
     if (batch.length === 0) return;
     pendingLogsRef.current = [];
 
+    const maxLines = 1500;
     setLogs((prev) => {
-      const maxLines = 3000;
-      if (prev.length + batch.length > maxLines) {
-        return [...prev.slice(-(maxLines - batch.length)), ...batch];
+      const combined = prev.length === 0 ? batch : [...prev, ...batch];
+      if (combined.length > maxLines) {
+        return combined.slice(-maxLines);
       }
-      return [...prev, ...batch];
+      return combined;
     });
   }, []);
 
-  // Enfileiramento ultra veloz
-  const queueLog = useCallback((text: string, type: 'in' | 'out' | 'info') => {
-    const time = new Date().toLocaleTimeString();
-    const entry: LogEntry = {
-      id: nextIdRef.current++,
-      text,
-      time,
-      type
-    };
+  const scheduleFlush = useCallback(() => {
+    if (isRafScheduledRef.current) return;
+    isRafScheduledRef.current = true;
 
-    pendingLogsRef.current.push(entry);
-
-    if (!isRafScheduledRef.current) {
-      isRafScheduledRef.current = true;
+    // Se a janela estiver minimizada/oculta, requestAnimationFrame é suspenso pelo Chromium.
+    // Usamos setTimeout para garantir que os dados continuem fluindo e sendo descartados do buffer!
+    if (typeof document !== 'undefined' && document.hidden) {
+      setTimeout(flushLogsBatch, 150);
+    } else {
       requestAnimationFrame(flushLogsBatch);
     }
   }, [flushLogsBatch]);
+
+  // Enfileiramento ultra veloz com suporte a chunks multi-linha e proteção contra estouro de memória
+  const queueLog = useCallback((text: string, type: 'in' | 'out' | 'info') => {
+    if (!text && text !== '') return;
+    const time = new Date().toLocaleTimeString();
+
+    // Se o texto vier com múltiplas linhas (\n), divide em entradas individuais
+    const rawLines = text.includes('\n') ? text.split(/\r?\n/) : [text];
+
+    for (const rawLine of rawLines) {
+      if (rawLine.length === 0 && rawLines.length > 1) continue;
+      pendingLogsRef.current.push({
+        id: nextIdRef.current++,
+        text: rawLine,
+        time,
+        type
+      });
+    }
+
+    // Proteção de memória: se a janela ficou muito tempo minimizada com fluxo pesado, limita a fila pendente
+    const MAX_PENDING = 2000;
+    if (pendingLogsRef.current.length > MAX_PENDING * 2) {
+      pendingLogsRef.current = pendingLogsRef.current.slice(-MAX_PENDING);
+    }
+
+    scheduleFlush();
+  }, [scheduleFlush]);
 
   const queueLogRef = useRef(queueLog);
   queueLogRef.current = queueLog;
@@ -198,13 +221,32 @@ export const SerialTerminal: React.FC<SerialTerminalProps> = ({
       }
     });
 
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        flushLogsBatch();
+        if (autoScrollRef.current && !isUserScrolledUpRef.current) {
+          scrollToBottom();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    let unsubRestored: (() => void) | undefined;
+    if (window.electronAPI && window.electronAPI.onWindowRestored) {
+      unsubRestored = window.electronAPI.onWindowRestored(() => {
+        handleVisibility();
+      });
+    }
+
     return () => {
       unsubData();
       unsubStatus();
       unsubPause();
       unsubResume();
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (unsubRestored) unsubRestored();
     };
-  }, []);
+  }, [flushLogsBatch, scrollToBottom]);
 
   const handleConnect = async () => {
     const targetPort = selectedPort || (ports.length > 0 ? ports[0].port : '');

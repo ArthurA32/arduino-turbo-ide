@@ -107,9 +107,8 @@ export const SerialPlotter: React.FC<SerialPlotterProps> = ({
   }, []);
 
   // Processamento de linhas seriais com suporte a múltiplos canais (CSV, Key:Value, Tab, etc.)
-  const parseSerialLine = useCallback((text: string) => {
-    if (!isPlotterRunningRef.current || isPausedRef.current) return;
-    const clean = text.trim();
+  const parseSingleLine = (singleLine: string) => {
+    const clean = singleLine.trim();
     if (!clean) return;
 
     let points: { name: string; value: number }[] = [];
@@ -164,13 +163,26 @@ export const SerialPlotter: React.FC<SerialPlotterProps> = ({
       chan.minValue = Math.min(chan.minValue, pt.value);
       chan.maxValue = Math.max(chan.maxValue, pt.value);
 
-      // Buffer circular limitado à janela máxima
-      if (chan.values.length > sampleWindowRef.current * 3) {
-        chan.values = chan.values.slice(-sampleWindowRef.current * 2);
+      // Buffer circular estritamente limitado à janela de amostragem
+      const limit = Math.max(200, sampleWindowRef.current * 2);
+      if (chan.values.length > limit) {
+        chan.values = chan.values.slice(-sampleWindowRef.current);
       }
     }
 
     channelsRef.current = current;
+  };
+
+  const parseSerialLine = useCallback((text: string) => {
+    if (!isPlotterRunningRef.current || isPausedRef.current || !text) return;
+    if (text.includes('\n')) {
+      const lines = text.split(/\r?\n/);
+      for (const l of lines) {
+        parseSingleLine(l);
+      }
+    } else {
+      parseSingleLine(text);
+    }
   }, []);
 
   const parseSerialLineRef = useRef(parseSerialLine);

@@ -43,6 +43,7 @@ export interface IElectronAPI {
   onSerialStatus: (callback: (status: { connected: boolean; port: string; baudRate?: number; error?: string }) => void) => () => void;
   onSerialPause: (callback: () => void) => () => void;
   onSerialResume: (callback: () => void) => () => void;
+  onWindowRestored: (callback: () => void) => () => void;
 }
 
 const api: IElectronAPI = {
@@ -108,6 +109,11 @@ const api: IElectronAPI = {
     const handler = () => callback();
     ipcRenderer.on('serial:resume', handler);
     return () => ipcRenderer.removeListener('serial:resume', handler);
+  },
+  onWindowRestored: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('window:restored', handler);
+    return () => ipcRenderer.removeListener('window:restored', handler);
   }
 };
 
