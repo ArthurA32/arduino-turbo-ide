@@ -75,8 +75,8 @@ interface TopBarProps {
   ports: any[];
   onRefreshPorts: () => void;
   isRefreshingPorts: boolean;
-  onToggleSerial: () => void;
-  isSerialOpen: boolean;
+  onToggleSerial?: () => void;
+  isSerialOpen?: boolean;
   onOpenLibraryModal: () => void;
   onOpenDebugModal: () => void;
   onOpenReportModal: () => void;
@@ -673,22 +673,6 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#181822] hover:bg-[#28181E] border border-[#2A2A3A] hover:border-rose-500/50 text-gray-300 hover:text-rose-200 transition-all active:scale-95 shrink-0"
         >
           <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-        </button>
-
-        <div className="h-5 w-[1px] bg-[#2A2A3A] mx-0.5 shrink-0" />
-
-        {/* Monitor Serial Nativo */}
-        <button
-          onClick={onToggleSerial}
-          title="Abrir / Alternar Monitor Serial"
-          className={`flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold border transition-all active:scale-95 shadow-sm shrink-0 ${
-            isSerialOpen
-              ? 'bg-[#00979C] text-white border-[#00979C] shadow-[#00979C]/20'
-              : 'bg-[#181822] text-gray-200 border-[#2A2A3A] hover:bg-[#222230] hover:text-white'
-          }`}
-        >
-          <Terminal className={`w-3.5 h-3.5 ${isSerialOpen ? 'text-white' : 'text-[#E47128]'}`} />
-          <span className="whitespace-nowrap font-medium">Monitor Serial</span>
         </button>
 
       </div>
