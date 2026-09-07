@@ -91,7 +91,13 @@ export class NetworkUpdateService {
       }
 
       const installerPath = path.join(updateDir, serverEntry.installer);
-      const isNewer = (serverEntry.build > currentInfo.build) || (serverEntry.version !== currentInfo.version);
+
+      // Comparação estrita para evitar falsos positivos de atualização ou downgrade indesejado
+      const parseSemver = (v: string) => (v || '0.0.0').split('.').map((n) => parseInt(n, 10) || 0);
+      const [sMaj, sMin, sPat] = parseSemver(serverEntry.version);
+      const [cMaj, cMin, cPat] = parseSemver(currentInfo.version);
+      const isVersionHigher = sMaj > cMaj || (sMaj === cMaj && (sMin > cMin || (sMin === cMin && sPat > cPat)));
+      const isNewer = (serverEntry.build > currentInfo.build) || (serverEntry.build === currentInfo.build && isVersionHigher);
 
       if (isNewer && fs.existsSync(installerPath)) {
         diagnostics.logSystem(`[AutoUpdater] Nova atualização detectada: v${serverEntry.version} (Build #${serverEntry.build})`);

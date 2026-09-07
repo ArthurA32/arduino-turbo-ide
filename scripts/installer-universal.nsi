@@ -116,8 +116,9 @@ Function .onInit
 
   ; Checar se foi passado parametro /AUTO_RESTART na linha de comando
   ${GetParameters} $R0
+  ClearErrors
   ${GetOptions} $R0 "/AUTO_RESTART" $R1
-  ${If} $R1 != ""
+  ${IfNot} ${Errors}
     StrCpy $AutoRestart "1"
   ${EndIf}
 FunctionEnd
@@ -224,11 +225,12 @@ Section "Instalar" SEC01
     Sleep 1000
     ExecShell "open" "$INSTDIR\Arduino Turbo IDE.exe"
   ${Else}
-    IfSilent 0 not_silent_restart
+    IfSilent do_silent_restart skip_silent_restart
+    do_silent_restart:
       DetailPrint "Reiniciando aplicacao atualizada silenciosamente..."
       Sleep 1000
       ExecShell "open" "$INSTDIR\Arduino Turbo IDE.exe"
-    not_silent_restart:
+    skip_silent_restart:
   ${EndIf}
 SectionEnd
 

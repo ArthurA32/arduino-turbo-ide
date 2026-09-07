@@ -201,7 +201,7 @@ export const SerialPlotter: React.FC<SerialPlotterProps> = ({
 
   // Conectar serial direto do plotter
   const handleConnect = async () => {
-    const targetPort = selectedPort || (ports.length > 0 ? ports[0].port : '');
+    const targetPort = selectedPort || (ports && ports.length > 0 ? ports[0]?.port : '');
     if (!targetPort) return;
 
     setIsConnecting(true);
@@ -715,7 +715,7 @@ export const SerialPlotter: React.FC<SerialPlotterProps> = ({
           {!isConnected && (
             <button
               onClick={handleConnect}
-              disabled={isUploading || isConnecting || (!selectedPort && ports.length === 0)}
+              disabled={isUploading || isConnecting || (!selectedPort && (!ports || ports.length === 0))}
               className="flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-700 hover:bg-emerald-600 text-white text-xs transition-colors shadow-sm disabled:opacity-50"
             >
               <Play className="w-3 h-3 fill-current" />

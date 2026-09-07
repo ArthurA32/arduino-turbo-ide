@@ -249,7 +249,7 @@ export const SerialTerminal: React.FC<SerialTerminalProps> = ({
   }, [flushLogsBatch, scrollToBottom]);
 
   const handleConnect = async () => {
-    const targetPort = selectedPort || (ports.length > 0 ? ports[0].port : '');
+    const targetPort = selectedPort || (ports && ports.length > 0 ? ports[0]?.port : '') || '';
     if (!targetPort) {
       queueLog('[AVISO] Nenhuma porta COM selecionada. Selecione uma porta no seletor.', 'info');
       return;

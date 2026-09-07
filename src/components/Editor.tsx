@@ -1,8 +1,24 @@
 import React, { useEffect, useRef } from 'react';
 import MonacoEditor, { loader } from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { EditorTabs, SketchFile } from './EditorTabs';
 import { registerArduinoIntellisense, lintArduinoCode } from '../services/arduinoIntellisense';
+
+// Configurar Web Workers dedicados do Monaco para processamento em thread separada
+(window as any).MonacoEnvironment = {
+  getWorker(_: any, label: string) {
+    if (label === 'json') {
+      return new jsonWorker();
+    }
+    if (label === 'typescript' || label === 'javascript') {
+      return new tsWorker();
+    }
+    return new editorWorker();
+  }
+};
 
 // Configurar Monaco para carregar 100% localmente do bundle (sem requisições externas para CDN)
 loader.config({ monaco });
