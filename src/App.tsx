@@ -80,8 +80,22 @@ export const App: React.FC = () => {
   const [isReadingFirmware, setIsReadingFirmware] = useState<boolean>(false);
   const [firmwareData, setFirmwareData] = useState<FirmwareReadData | null>(null);
 
+  const [versionInfo, setVersionInfo] = useState<{ version: string; build: number; arch: string; targetName: string; fullString: string }>({
+    version: '0.1.3',
+    build: 13,
+    arch: 'arm64',
+    targetName: 'Windows ARM64 Nativo',
+    fullString: 'v0.1.3 [ARM64]'
+  });
 
   useEffect(() => {
+    // 0. Carregar versão da aplicação e arquitetura
+    if (window.electronAPI && typeof window.electronAPI.getAppVersion === 'function') {
+      window.electronAPI.getAppVersion().then((info) => {
+        if (info) setVersionInfo(info);
+      }).catch(() => {});
+    }
+
     // 1. Carregar lista de placas
     window.electronAPI.listBoards().then((boardList) => {
       const safeList = Array.isArray(boardList) ? boardList : [];
@@ -602,6 +616,7 @@ export const App: React.FC = () => {
         fileName={activeFile?.name || 'sketch.ino'}
         partitionScheme={partitionScheme}
         onPartitionSchemeChange={handlePartitionSchemeChange}
+        versionInfo={versionInfo}
       />
 
 
@@ -658,6 +673,7 @@ export const App: React.FC = () => {
           setDrawerTab('processos');
           setIsDrawerOpen(true);
         }}
+        versionInfo={versionInfo}
       />
 
       {/* Modais */}

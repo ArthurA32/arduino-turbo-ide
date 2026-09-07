@@ -15,6 +15,7 @@ interface StatusBarProps {
   processName?: string;
   processPercentage?: number;
   onOpenProcessesDrawer?: () => void;
+  versionInfo?: { version: string; build: number; arch: string; targetName: string; fullString: string };
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -30,7 +31,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   totalProcessSteps,
   processName,
   processPercentage,
-  onOpenProcessesDrawer
+  onOpenProcessesDrawer,
+  versionInfo
 }) => {
   return (
     <footer className="h-6 bg-[#16161D] border-t border-[#2B2B36] flex items-center justify-between px-3 text-[11px] text-gray-400 select-none z-30 font-sans">
@@ -139,6 +141,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
         <div className="text-[10px] text-gray-500 font-mono border-l border-[#2B2B36] pl-2">
           UTF-8
+        </div>
+
+        <div 
+          className="text-[10px] font-mono text-cyan-400/80 border-l border-[#2B2B36] pl-2 cursor-default font-semibold"
+          title={`Versão da IDE: ${versionInfo?.fullString || 'v0.1.3 [ARM64]'} | Build #${versionInfo?.build || 13} (${versionInfo?.targetName || 'Windows ARM64'})`}
+        >
+          {versionInfo?.fullString || 'v0.1.3 [ARM64]'}
         </div>
       </div>
     </footer>

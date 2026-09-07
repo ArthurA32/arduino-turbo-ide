@@ -85,9 +85,11 @@ interface TopBarProps {
   fileName: string;
   partitionScheme?: string;
   onPartitionSchemeChange?: (scheme: string) => void;
+  versionInfo?: { version: string; build: number; arch: string; targetName: string; fullString: string };
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
+  versionInfo,
   onCompile,
   onUpload,
   isCompiling,
@@ -233,6 +235,12 @@ export const TopBar: React.FC<TopBarProps> = ({
           />
           <span className="font-extrabold text-[12px] tracking-wider bg-gradient-to-r from-cyan-400 via-teal-300 to-amber-400 bg-clip-text text-transparent hidden sm:inline">
             TURBO IDE
+          </span>
+          <span 
+            className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 shrink-0 hidden md:inline shadow-sm"
+            title={`Arduino Turbo IDE v${versionInfo?.version || '0.1.3'} [${versionInfo?.arch === 'arm64' ? 'ARM64 Nativo' : 'x64'}] - Build #${versionInfo?.build || 13}`}
+          >
+            v{versionInfo?.version || '0.1.3'}
           </span>
         </div>
 

@@ -44,9 +44,11 @@ export interface IElectronAPI {
   onSerialPause: (callback: () => void) => () => void;
   onSerialResume: (callback: () => void) => () => void;
   onWindowRestored: (callback: () => void) => () => void;
+  getAppVersion: () => Promise<{ version: string; build: number; arch: string; targetName: string; releaseDate: string; fullString: string }>;
 }
 
 const api: IElectronAPI = {
+  getAppVersion: () => ipcRenderer.invoke('app:version-info'),
   listPorts: () => ipcRenderer.invoke('ports:list'),
   listBoards: () => ipcRenderer.invoke('boards:list'),
   getCliStatus: () => ipcRenderer.invoke('cli:status'),

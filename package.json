@@ -10,7 +10,9 @@
     "build": "tsc && vite build",
     "build:x64": "node scripts/build-and-export.js --arch=x64",
     "build:arm64": "node scripts/build-and-export.js --arch=arm64",
-    "build:all": "node scripts/build-and-export.js --arch=all"
+    "build:all": "node scripts/build-and-export.js --arch=all",
+    "bump:arm64": "node scripts/bump-version.js --arch=arm64",
+    "bump:x64": "node scripts/bump-version.js --arch=x64"
   },
   "keywords": [
     "arduino",

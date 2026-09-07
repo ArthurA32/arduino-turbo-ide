@@ -9,6 +9,7 @@ import { diagnostics } from './diagnostics';
 import { nativeSerial } from './nativeSerial';
 import { detectSystemProfile } from './systemProfile';
 import { firmwareReaderService } from './firmwareReader';
+import { getAppVersionInfo } from './version';
 
 
 // ==========================================================
@@ -127,6 +128,8 @@ function createWindow() {
   try {
     const preload = resolvePreloadPath();
     const appIcon = resolveAppIcon();
+    const versionInfo = getAppVersionInfo();
+    const dynamicTitle = `Arduino Turbo IDE v${versionInfo.version} [${versionInfo.arch === 'arm64' ? 'ARM64' : 'x64'}]`;
 
     mainWindow = new BrowserWindow({
       width: 1240,
@@ -135,7 +138,7 @@ function createWindow() {
       minHeight: 620,
       backgroundColor: '#1E1E1E',
       frame: true,
-      title: 'Arduino Turbo IDE',
+      title: dynamicTitle,
       icon: appIcon,
       webPreferences: {
         preload,
@@ -260,6 +263,10 @@ app.on('window-all-closed', () => {
 // ==========================================
 // 5. IPC HANDLERS NATIVOS
 // ==========================================
+
+ipcMain.handle('app:version-info', async () => {
+  return getAppVersionInfo();
+});
 
 ipcMain.handle('ports:list', async () => {
   try {

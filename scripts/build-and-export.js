@@ -27,9 +27,19 @@ for (const arg of args) {
 const buildX64 = targetArchArg === 'x64' || targetArchArg === 'all';
 const buildArm64 = targetArchArg === 'arm64' || targetArchArg === 'all';
 
+const versionConfigPath = path.join(projectRoot, 'src', 'version.json');
+let versionConfig = { arm64: { version: '0.1.3', build: 13 }, x64: { version: '0.1.1', build: 11 } };
+if (fs.existsSync(versionConfigPath)) {
+  try {
+    versionConfig = JSON.parse(fs.readFileSync(versionConfigPath, 'utf-8'));
+  } catch {}
+}
+
 console.log('==========================================================');
-console.log(`  PIPELINE DUAL-BUILD ARDUINO TURBO IDE                   `);
+console.log(`  PIPELINE BUILD ARDUINO TURBO IDE                        `);
 console.log(`  Alvos selecionados: ${buildX64 && buildArm64 ? 'x64 + ARM64 (Dual Target)' : buildX64 ? 'Apenas x64' : 'Apenas ARM64'}`);
+if (buildArm64) console.log(`  Versão ARM64: v${versionConfig.arm64?.version || '0.1.3'} (Build #${versionConfig.arm64?.build || 13})`);
+if (buildX64) console.log(`  Versão x64:   v${versionConfig.x64?.version || '0.1.1'} (Build #${versionConfig.x64?.build || 11})`);
 console.log('==========================================================');
 
 // 1. Compilação do Frontend e Electron com Vite
@@ -38,8 +48,11 @@ execSync('npm run build', { cwd: projectRoot, stdio: 'inherit' });
 
 // Função para empacotar e exportar por arquitetura
 function packageAndExport(arch, label, folderName, zipName) {
+  const archVersion = versionConfig[arch]?.version || '0.1.3';
+  const archBuild = versionConfig[arch]?.build || 13;
+
   console.log(`\n----------------------------------------------------------`);
-  console.log(`[2/3] Empacotando aplicação nativa para ${label} (${arch})...`);
+  console.log(`[2/3] Empacotando aplicação nativa para ${label} (${arch}) v${archVersion}...`);
   console.log(`----------------------------------------------------------`);
 
   execSync(`npx electron-builder --${arch} --win --dir`, { cwd: projectRoot, stdio: 'inherit' });
@@ -94,12 +107,24 @@ function packageAndExport(arch, label, folderName, zipName) {
 
   if (fs.existsSync(rceditExe) && fs.existsSync(appIconIco) && fs.existsSync(targetExe)) {
     try {
-      console.log(`   🎨 Injetando ícone nativo oficial no executável via rcedit...`);
-      execSync(`"${rceditExe}" "${targetExe}" --set-icon "${appIconIco}" --set-version-string "FileDescription" "Arduino Turbo IDE" --set-version-string "ProductName" "Arduino Turbo IDE"`, { stdio: 'inherit' });
-      console.log(`   ✔ Ícone e metadados injetados com sucesso no executável.`);
+      console.log(`   🎨 Injetando ícone nativo oficial e versão v${archVersion} (${arch.toUpperCase()}) no executável via rcedit...`);
+      execSync(`"${rceditExe}" "${targetExe}" --set-icon "${appIconIco}" --set-file-version "${archVersion}" --set-product-version "${archVersion}" --set-version-string "FileVersion" "${archVersion}" --set-version-string "ProductVersion" "${archVersion} (${arch.toUpperCase()})" --set-version-string "FileDescription" "Arduino Turbo IDE (${arch.toUpperCase()})" --set-version-string "ProductName" "Arduino Turbo IDE"`, { stdio: 'inherit' });
+      console.log(`   ✔ Ícone e metadados de versão v${archVersion} injetados com sucesso no executável.`);
     } catch (e) {
       console.warn('   Aviso ao rodar rcedit no executável:', e.message);
     }
+  }
+
+  // Copiar version.json para pasta resources do aplicativo
+  try {
+    const resDir = path.join(targetOutputDir, 'resources');
+    fs.mkdirSync(resDir, { recursive: true });
+    fs.copyFileSync(versionConfigPath, path.join(resDir, 'version.json'));
+    const appSrcDir = path.join(targetOutputDir, 'resources', 'app', 'src');
+    fs.mkdirSync(appSrcDir, { recursive: true });
+    fs.copyFileSync(versionConfigPath, path.join(appSrcDir, 'version.json'));
+  } catch (err) {
+    console.warn('   Aviso ao copiar version.json para resources:', err.message);
   }
 
   // Copiar binários nativos dedicados do arduino-cli de acordo com a arquitetura
