@@ -11,7 +11,7 @@ export interface UpdateReleaseEntry {
   build: number;
   installer: string;
   releaseDate: string;
-  changelog?: string;
+  changelog?: string | string[];
   fileSize?: number;
 }
 
@@ -88,6 +88,11 @@ export class NetworkUpdateService {
           currentInfo,
           error: `Nenhum release encontrado para ${archKey} no servidor.`
         };
+      }
+
+      // Herdar changelog universal se a entrada específica não tiver definido
+      if (!serverEntry.changelog && (manifest as any).universal?.changelog) {
+        serverEntry.changelog = (manifest as any).universal.changelog;
       }
 
       const installerPath = path.join(updateDir, serverEntry.installer);

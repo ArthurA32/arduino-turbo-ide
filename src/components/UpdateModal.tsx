@@ -87,6 +87,46 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const changelogItems: string[] = React.useMemo(() => {
+    const raw = serverInfo?.changelog;
+    if (Array.isArray(raw)) {
+      return raw.map((item) => String(item).trim()).filter(Boolean);
+    }
+    if (typeof raw === 'string' && raw.trim().length > 0) {
+      if (raw.includes('\n')) {
+        return raw.split('\n').map((s) => s.trim()).filter(Boolean);
+      }
+      if (raw.includes('|')) {
+        return raw.split('|').map((s) => s.trim()).filter(Boolean);
+      }
+      return [raw.trim()];
+    }
+    return [
+      'Atualização de estabilidade e desempenho para Windows ARM64 e x64.',
+      'Atualização silenciosa em segundo plano com reinício automático.'
+    ];
+  }, [serverInfo?.changelog]);
+
+  const renderChangelogItem = (rawText: string, index: number) => {
+    const clean = rawText.replace(/^[-*•]\s*/, '').trim();
+    const colonIndex = clean.indexOf(':');
+    if (colonIndex > 0 && colonIndex <= 45) {
+      const topic = clean.slice(0, colonIndex).trim();
+      const detail = clean.slice(colonIndex + 1).trim();
+      return (
+        <li key={index} className="text-[11px] leading-relaxed text-gray-300">
+          <strong className="text-cyan-300 font-semibold">{topic}:</strong> {detail}
+        </li>
+      );
+    }
+
+    return (
+      <li key={index} className="text-[11px] leading-relaxed text-gray-300">
+        {clean}
+      </li>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fadeIn">
       <div className="bg-[#1e1e1e] border border-cyan-500/30 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
@@ -156,16 +196,21 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             </button>
           </div>
 
-          {/* Destaques / Changelog */}
-          <div className="bg-black/30 border border-gray-800/80 rounded-lg p-3 space-y-1.5 text-xs text-gray-300">
-            <div className="flex items-center gap-2 font-medium text-gray-200">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              O que há de novo neste update:
+          {/* Destaques / Changelog Dinâmico */}
+          <div className="bg-black/30 border border-gray-800/80 rounded-lg p-3 space-y-2 text-xs text-gray-300">
+            <div className="flex items-center justify-between font-medium text-gray-200">
+              <div className="flex items-center gap-2">
+                <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>O que há de novo neste update:</span>
+              </div>
+              {serverInfo?.releaseDate && (
+                <span className="text-[10px] text-gray-400 font-mono font-normal">
+                  {serverInfo.releaseDate}
+                </span>
+              )}
             </div>
-            <ul className="list-disc list-inside space-y-1 text-gray-400 text-[11px] pl-1">
-              <li><strong className="text-cyan-300">Atualização 100% Silenciosa:</strong> Sem janelas ou assistentes de instalação. Arquivos substituídos em background.</li>
-              <li><strong className="text-cyan-300">Reinício Automático:</strong> O Turbo IDE reabre sozinho na versão atualizada em segundos.</li>
-              <li>Preservação intacta de atalhos, ícones e configurações do usuário.</li>
+            <ul className="list-disc list-outside space-y-1.5 text-gray-400 text-[11px] pl-4 max-h-44 overflow-y-auto pr-1">
+              {changelogItems.map((item, idx) => renderChangelogItem(item, idx))}
             </ul>
           </div>
 

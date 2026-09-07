@@ -173,27 +173,33 @@ if (serverDir) {
   const manifestPath = path.join(serverDir, 'updates.json');
   const installerSize = fs.statSync(serverInstallerPath).size;
 
+  const arm64Changelog = versionConfig.arm64?.changelog || versionConfig.changelog || [];
+  const x64Changelog = versionConfig.x64?.changelog || versionConfig.changelog || [];
+  const universalChangelog = versionConfig.universal?.changelog || arm64Changelog || [];
+
   const manifest = {
     universal: {
       version: mainVersion,
-      build: versionConfig.arm64?.build || 15,
+      build: versionConfig.arm64?.build || 19,
       installer: 'Arduino_Turbo_IDE_Setup.exe',
       releaseDate: new Date().toISOString().split('T')[0],
-      changelog: `Instalador Universal Unificado v${mainVersion} com suporte e seleção nativa para Windows ARM64 e Windows x64.`,
+      changelog: universalChangelog,
       fileSize: installerSize
     },
     arm64: {
       version: arm64Version,
-      build: versionConfig.arm64?.build || 15,
+      build: versionConfig.arm64?.build || 19,
       installer: 'Arduino_Turbo_IDE_Setup.exe',
       releaseDate: new Date().toISOString().split('T')[0],
+      changelog: arm64Changelog,
       fileSize: installerSize
     },
     x64: {
       version: x64Version,
-      build: versionConfig.x64?.build || 13,
+      build: versionConfig.x64?.build || 16,
       installer: 'Arduino_Turbo_IDE_Setup.exe',
       releaseDate: new Date().toISOString().split('T')[0],
+      changelog: x64Changelog,
       fileSize: installerSize
     },
     lastUpdated: new Date().toISOString()
@@ -201,6 +207,12 @@ if (serverDir) {
 
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
   console.log(`   ✔ Manifesto updates.json atualizado com sucesso no servidor.`);
+
+  try {
+    const localManifest = path.join(releaseDir, 'updates.json');
+    fs.writeFileSync(localManifest, JSON.stringify(manifest, null, 2), 'utf-8');
+    console.log(`   ✔ Cópia local de updates.json salva em release.`);
+  } catch {}
 } else {
   console.warn('   ⚠ Servidor de rede offline no momento. Instalador salvo localmente.');
 }

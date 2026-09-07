@@ -28,7 +28,7 @@ export function nextOdometerVersion(currentVersion) {
   return `${major}.${minor}.${patch}`;
 }
 
-export function bump(targetArch = 'arm64') {
+export function bump(targetArch = 'arm64', changelogItems = null) {
   if (!fs.existsSync(versionPath)) {
     throw new Error('Arquivo src/version.json nao encontrado!');
   }
@@ -36,36 +36,50 @@ export function bump(targetArch = 'arm64') {
   const raw = fs.readFileSync(versionPath, 'utf-8');
   const data = JSON.parse(raw);
 
-  if (!data[targetArch]) {
-    throw new Error(`Arquitetura desconhecida: ${targetArch}`);
-  }
+  const targets = targetArch === 'all' ? ['arm64', 'x64'] : [targetArch];
 
-  const prevVersion = data[targetArch].version;
-  const nextVer = nextOdometerVersion(prevVersion);
-  data[targetArch].version = nextVer;
-  data[targetArch].build = (data[targetArch].build || 0) + 1;
-  data[targetArch].releaseDate = new Date().toISOString().split('T')[0];
+  for (const arch of targets) {
+    if (!data[arch]) {
+      throw new Error(`Arquitetura desconhecida: ${arch}`);
+    }
+
+    const prevVersion = data[arch].version;
+    const nextVer = nextOdometerVersion(prevVersion);
+    data[arch].version = nextVer;
+    data[arch].build = (data[arch].build || 0) + 1;
+    data[arch].releaseDate = new Date().toISOString().split('T')[0];
+
+    if (changelogItems && Array.isArray(changelogItems) && changelogItems.length > 0) {
+      data[arch].changelog = changelogItems;
+    }
+
+    console.log(`✔ Versao para ${arch.toUpperCase()} atualizada: ${prevVersion} -> ${nextVer} (Build ${data[arch].build})`);
+  }
 
   fs.writeFileSync(versionPath, JSON.stringify(data, null, 2), 'utf-8');
 
-  // Sincronizar package.json
+  // Sincronizar package.json com o primeiro target
   if (fs.existsSync(packageJsonPath)) {
     const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    pkg.version = nextVer;
+    pkg.version = data[targets[0]].version;
     fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2), 'utf-8');
   }
 
-  console.log(`✔ Versao para ${targetArch.toUpperCase()} atualizada: ${prevVersion} -> ${nextVer} (Build ${data[targetArch].build})`);
-  return { prevVersion, nextVer, build: data[targetArch].build };
+  return data;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   let arch = 'arm64';
+  let changelog = null;
+
   for (const a of args) {
     if (a.startsWith('--arch=')) {
       arch = a.split('=')[1].toLowerCase();
+    } else if (a.startsWith('--changelog=')) {
+      const rawCl = a.substring('--changelog='.length);
+      changelog = rawCl.split('|').map(s => s.trim()).filter(Boolean);
     }
   }
-  bump(arch);
+  bump(arch, changelog);
 }
