@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="0.2363527">
-    <testsuite name="tests/e2e/userFlows.test.tsx" timestamp="2026-09-07T21:49:53.702Z" hostname="WIN-BFB7PNSPVLR" tests="5" failures="0" errors="0" skipped="0" time="0.2363527">
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 1: Deve inicializar a TopBar exibindo logotipo, versão ARM64 e botão de Update disponível" time="0.0564811">
+<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="0.1990531">
+    <testsuite name="tests/e2e/userFlows.test.tsx" timestamp="2026-09-07T22:03:50.453Z" hostname="WIN-BFB7PNSPVLR" tests="5" failures="0" errors="0" skipped="0" time="0.1990531">
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 1: Deve inicializar a TopBar exibindo logotipo, versão ARM64 e botão de Update disponível" time="0.0509848">
         </testcase>
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 2: Deve permitir alternar a placa e atualizar o esquema de partição condicional" time="0.0490458">
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 2: Deve permitir alternar a placa e atualizar o esquema de partição condicional" time="0.0413184">
         </testcase>
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 3: Deve permitir trocar a porta COM ativa pelo seletor" time="0.0470426">
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 3: Deve permitir trocar a porta COM ativa pelo seletor" time="0.0301708">
         </testcase>
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 4: Deve abrir o modal de atualização ao clicar no botão de Update e exibir notas de versão" time="0.0465805">
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 4: Deve abrir o modal de atualização ao clicar no botão de Update e exibir notas de versão" time="0.0407429">
         </testcase>
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 5: Deve acionar ações dos botões principais de compilação, gravação e leitura de chip" time="0.0342369">
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 5: Deve acionar ações dos botões principais de compilação, gravação e leitura de chip" time="0.0333187">
         </testcase>
     </testsuite>
 </testsuites>

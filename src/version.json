@@ -1,14 +1,14 @@
 {
   "arm64": {
-    "version": "0.2.2",
-    "build": 22,
+    "version": "0.2.3",
+    "build": 23,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Atualizador x64: Resolução de encerramento prematuro do instalador e restauração da atualização contínua.",
-      "Visual do Update: Mensagem 'Atualizando Arduino Turbo IDE' padronizada na interface nativa.",
-      "Central de Versões: Clique no número da versão na barra superior para verificar atualizações instantaneamente.",
-      "Semver Estrito: Transição de v0.1.9 para v0.2.0 sem subversões de dois dígitos."
+      "Atualizador ARM64: Sincronização da versão nativa com suporte a verificação instantânea na barra superior.",
+      "Visual do Update: Título 'Atualizando Arduino Turbo IDE' e barra de progresso nativa em tempo real.",
+      "Resiliência Geral: Correção definitiva de encerramento prematuro e proteção de processos.",
+      "Performance Snapdragon: Execução e compilação otimizada para processadores ARM64 de 64 bits."
     ]
   },
   "x64": {
