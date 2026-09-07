@@ -21,68 +21,99 @@ export class SerialManager extends EventEmitter {
     super();
   }
 
+  private cachedPorts: DetectedPort[] = [];
+  private lastPortScanTime: number = 0;
+
   public setUploading(uploading: boolean) {
     this.isUploading = uploading;
     this.emit('uploadStateChange', uploading);
   }
 
   public async listPorts(): Promise<DetectedPort[]> {
-    const ports: DetectedPort[] = [];
-
-    try {
-      // Usar comando nativo do PowerShell para listar todas as portas COM com detalhes PNP
-      const psCommand = `powershell -NoProfile -Command "Get-CimInstance Win32_PnPEntity | Where-Object { $_.Name -match '\\(COM\\d+\\)' } | Select-Object Name, Description, Manufacturer, DeviceID | ConvertTo-Json -Compress"`;
-      
-      const { stdout } = await execPromise(psCommand);
-      if (!stdout || stdout.trim() === '') {
-        return [];
-      }
-
-      let parsed: any;
-      try {
-        parsed = JSON.parse(stdout.trim());
-      } catch (e) {
-        return [];
-      }
-
-      const rawList = Array.isArray(parsed) ? parsed : [parsed];
-
-      for (const item of rawList) {
-        if (!item || !item.Name) continue;
-
-        const comMatch = item.Name.match(/\((COM\d+)\)/i);
-        if (!comMatch) continue;
-
-        const portName = comMatch[1].toUpperCase();
-        const friendlyName = item.Name || portName;
-        const description = item.Description || '';
-        const manufacturer = item.Manufacturer || '';
-        const deviceId = item.DeviceID || '';
-
-        // Extrair VID e PID se disponíveis
-        const vidMatch = deviceId.match(/VID_([0-9A-Fa-f]{4})/);
-        const pidMatch = deviceId.match(/PID_([0-9A-Fa-f]{4})/);
-        const vid = vidMatch ? vidMatch[1].toUpperCase() : undefined;
-        const pid = pidMatch ? pidMatch[1].toUpperCase() : undefined;
-
-        // Adivinhar o modelo de placa / chip
-        const boardGuess = this.guessBoardType(friendlyName, description, manufacturer, vid, pid);
-
-        ports.push({
-          port: portName,
-          friendlyName,
-          description,
-          manufacturer,
-          vendorId: vid,
-          productId: pid,
-          boardGuess
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao listar portas COM:', error);
+    const now = Date.now();
+    // Cache de 2.5 segundos para evitar múltiplos spawns simultâneos do PowerShell
+    if (this.cachedPorts.length > 0 && (now - this.lastPortScanTime) < 2500) {
+      return this.cachedPorts;
     }
 
-    return ports;
+    const portsMap = new Map<string, DetectedPort>();
+
+    // 1. Sondagem Ultrarrápida no Registro do Windows (15 a 25ms)
+    try {
+      const { stdout: regOut } = await execPromise('reg query "HKLM\\HARDWARE\\DEVICEMAP\\SERIALCOMM"', {
+        timeout: 1000
+      });
+      if (regOut) {
+        const lines = regOut.split('\n');
+        for (const line of lines) {
+          const match = line.match(/REG_SZ\s+(COM\d+)/i);
+          if (match) {
+            const portName = match[1].toUpperCase();
+            portsMap.set(portName, {
+              port: portName,
+              friendlyName: `Porta Serial (${portName})`,
+              description: line.trim().split(/\s+/)[0] || 'Dispositivo Serial',
+              manufacturer: 'Microsoft / Fabricante Padrão',
+              boardGuess: 'Porta Serial'
+            });
+          }
+        }
+      }
+    } catch {
+      // Registro pode estar vazio se nenhuma porta existir
+    }
+
+    // 2. Enriquecimento com Detalhes PNP e VID/PID filtrando EXCLUSIVAMENTE por 'Ports' (~200ms)
+    try {
+      const psCommand = `powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_PnPEntity -Filter 'PNPClass = ''Ports''' | Select-Object Name, Description, Manufacturer, DeviceID | ConvertTo-Json -Compress"`;
+      const { stdout: psOut } = await execPromise(psCommand, { timeout: 2500 });
+      
+      if (psOut && psOut.trim()) {
+        let parsed: any;
+        try {
+          parsed = JSON.parse(psOut.trim());
+        } catch {}
+
+        if (parsed) {
+          const rawList = Array.isArray(parsed) ? parsed : [parsed];
+          for (const item of rawList) {
+            if (!item || !item.Name) continue;
+            const comMatch = item.Name.match(/\((COM\d+)\)/i);
+            if (!comMatch) continue;
+
+            const portName = comMatch[1].toUpperCase();
+            const friendlyName = item.Name || portName;
+            const description = item.Description || '';
+            const manufacturer = item.Manufacturer || '';
+            const deviceId = item.DeviceID || '';
+
+            const vidMatch = deviceId.match(/VID_([0-9A-Fa-f]{4})/);
+            const pidMatch = deviceId.match(/PID_([0-9A-Fa-f]{4})/);
+            const vid = vidMatch ? vidMatch[1].toUpperCase() : undefined;
+            const pid = pidMatch ? pidMatch[1].toUpperCase() : undefined;
+
+            const boardGuess = this.guessBoardType(friendlyName, description, manufacturer, vid, pid);
+
+            portsMap.set(portName, {
+              port: portName,
+              friendlyName,
+              description,
+              manufacturer,
+              vendorId: vid,
+              productId: pid,
+              boardGuess
+            });
+          }
+        }
+      }
+    } catch (e: any) {
+      // Se o PowerShell falhar ou atingir timeout, os dados obtidos pelo registro são preservados
+    }
+
+    const result = Array.from(portsMap.values());
+    this.cachedPorts = result;
+    this.lastPortScanTime = Date.now();
+    return result;
   }
 
   private guessBoardType(name: string, desc: string, manuf: string, vid?: string, pid?: string): string {

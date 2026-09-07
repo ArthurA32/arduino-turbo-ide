@@ -13,6 +13,11 @@ body {
   color: #CCCCCC;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   user-select: none;
+  touch-action: manipulation;
+}
+
+button {
+  touch-action: manipulation;
 }
 
 /* Custom scrollbars */

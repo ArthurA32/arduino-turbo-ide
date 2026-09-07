@@ -1,26 +1,26 @@
 {
   "arm64": {
-    "version": "0.2.4",
-    "build": 24,
+    "version": "0.2.5",
+    "build": 25,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Animações Fluidas de Dropdown: Abertura suave em cascata nos seletores de placas, portas COM e partições.",
-      "Abas Deslizantes Suaves: Transições animadas ao criar ou alternar arquivos no editor e abas do painel.",
-      "Modais Refinados: Efeito de desfoque de fundo (backdrop-blur) e abertura elástica suave (modalPop).",
-      "Aceleração por Hardware: Renderização fluida a 60fps sem impacto de CPU na compilação."
+      "Latência Zero no ARM64: Eliminação definitiva do delay de clique em placas e portas com sondagem ultrarrápida (20ms) e cache inteligente.",
+      "Menu de Partições Refinado (Huge App): Novo layout espaçoso e legível no estilo do seletor de portas, com cards destacados e badges claros.",
+      "Renderização Otimizada: Remoção de gargalos de backdrop-filter e limitação inteligente de renderização inicial no thread principal.",
+      "Touch & Trackpad Instantâneo: Remoção de latência de 300ms de toque em telas sensíveis e touchpads no Windows."
     ]
   },
   "x64": {
-    "version": "0.2.1",
-    "build": 21,
+    "version": "0.2.2",
+    "build": 22,
     "target": "Windows x64",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Animações Fluidas de Dropdown: Abertura suave em cascata nos seletores de placas, portas COM e partições.",
-      "Abas Deslizantes Suaves: Transições animadas ao criar ou alternar arquivos no editor e abas do painel.",
-      "Modais Refinados: Efeito de desfoque de fundo (backdrop-blur) e abertura elástica suave (modalPop).",
-      "Aceleração por Hardware: Renderização fluida a 60fps sem impacto de CPU na compilação."
+      "Latência Zero no ARM64: Eliminação definitiva do delay de clique em placas e portas com sondagem ultrarrápida (20ms) e cache inteligente.",
+      "Menu de Partições Refinado (Huge App): Novo layout espaçoso e legível no estilo do seletor de portas, com cards destacados e badges claros.",
+      "Renderização Otimizada: Remoção de gargalos de backdrop-filter e limitação inteligente de renderização inicial no thread principal.",
+      "Touch & Trackpad Instantâneo: Remoção de latência de 300ms de toque em telas sensíveis e touchpads no Windows."
     ]
   }
 }

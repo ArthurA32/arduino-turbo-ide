@@ -31,8 +31,30 @@ export const App: React.FC = () => {
   const [activeFileId, setActiveFileId] = useState<string>('main');
   const [currentFilePath, setCurrentFilePath] = useState<string>('');
 
-  const [boards, setBoards] = useState<any[]>([]);
-  const [selectedBoard, setSelectedBoard] = useState<any>(null);
+  const [boards, setBoards] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('turbo_boards_cache');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+  const [selectedBoard, setSelectedBoard] = useState<any>(() => {
+    try {
+      const savedFqbn = localStorage.getItem('turbo_selected_board_fqbn');
+      const cached = localStorage.getItem('turbo_boards_cache');
+      if (savedFqbn && cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          const found = parsed.find((b: any) => b.fqbn === savedFqbn);
+          if (found) return found;
+        }
+      }
+    } catch {}
+    return null;
+  });
 
   const [ports, setPorts] = useState<any[]>([]);
   const [selectedPort, setSelectedPort] = useState<string>('');
@@ -142,6 +164,11 @@ export const App: React.FC = () => {
     window.electronAPI.listBoards().then((boardList) => {
       const safeList = Array.isArray(boardList) ? boardList : [];
       setBoards(safeList);
+      try {
+        if (safeList.length > 0) {
+          localStorage.setItem('turbo_boards_cache', JSON.stringify(safeList));
+        }
+      } catch {}
       if (safeList.length > 0) {
         let chosenBoard = safeList[0];
         try {
