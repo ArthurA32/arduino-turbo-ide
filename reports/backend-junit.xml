@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.0119179">
-    <testsuite name="tests/backend/nativeSerialSafety.test.ts" timestamp="2026-09-07T22:49:28.951Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0035971">
-        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; deve exigir liberação serial silenciosa disconnect(true) antes de qualquer upload ou leitura" time="0.0019142">
+<testsuites name="vitest tests" tests="10" failures="0" errors="0" time="0.2682526">
+    <testsuite name="tests/backend/nativeSerialSafety.test.ts" timestamp="2026-09-07T23:05:32.828Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0035451">
+        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; deve exigir liberação serial silenciosa disconnect(true) antes de qualquer upload ou leitura" time="0.0020083">
         </testcase>
-        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; não deve emitir desconexão ruidosa quando silent=true para não resetar estado do UI desnecessariamente" time="0.0002307">
-        </testcase>
-    </testsuite>
-    <testsuite name="tests/backend/networkUpdateService.test.ts" timestamp="2026-09-07T22:49:28.957Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.0042477">
-        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve detectar atualização quando a versão do servidor for maior" time="0.0015623">
-        </testcase>
-        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve rejeitar atualizações para versões menores ou iguais (prevenção de downgrade)" time="0.0002102">
-        </testcase>
-        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve herdar changelog universal quando a entrada específica não tiver definido" time="0.0002224">
-        </testcase>
-        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve configurar o modo /UPDATE com argumentos de auto-restart corretos" time="0.0008768">
+        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; não deve emitir desconexão ruidosa quando silent=true para não resetar estado do UI desnecessariamente" time="0.000264">
         </testcase>
     </testsuite>
-    <testsuite name="tests/backend/version.test.ts" timestamp="2026-09-07T22:49:28.958Z" hostname="WIN-BFB7PNSPVLR" tests="3" failures="0" errors="0" skipped="0" time="0.0040731">
-        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve existir o arquivo src/version.json com estrutura válida para ARM64 e x64" time="0.0021861">
+    <testsuite name="tests/backend/networkUpdateService.test.ts" timestamp="2026-09-07T23:05:32.832Z" hostname="WIN-BFB7PNSPVLR" tests="5" failures="0" errors="0" skipped="0" time="0.2606341">
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve detectar atualização quando a versão do servidor for maior" time="0.0015367">
         </testcase>
-        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve conter campo de changelog não vazio para ambas as arquiteturas" time="0.0003313">
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve rejeitar atualizações para versões menores ou iguais (prevenção de downgrade)" time="0.0002448">
         </testcase>
-        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve detectar a arquitetura corretamente a partir de variáveis de ambiente do Windows" time="0.0001989">
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve herdar changelog universal quando a entrada específica não tiver definido" time="0.0002369">
+        </testcase>
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve configurar o modo /UPDATE com argumentos de auto-restart corretos" time="0.0009283">
+        </testcase>
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve rejeitar e abortar verificação de rede em menos de 600ms quando o host estiver offline" time="0.2556245">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/backend/version.test.ts" timestamp="2026-09-07T23:05:32.833Z" hostname="WIN-BFB7PNSPVLR" tests="3" failures="0" errors="0" skipped="0" time="0.0040734">
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve existir o arquivo src/version.json com estrutura válida para ARM64 e x64" time="0.0022519">
+        </testcase>
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve conter campo de changelog não vazio para ambas as arquiteturas" time="0.0003724">
+        </testcase>
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve detectar a arquitetura corretamente a partir de variáveis de ambiente do Windows" time="0.0001967">
         </testcase>
     </testsuite>
 </testsuites>

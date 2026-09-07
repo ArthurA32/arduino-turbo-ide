@@ -134,120 +134,181 @@ export const App: React.FC = () => {
     }
   };
 
+  const refreshPorts = async () => {
+    setIsRefreshingPorts(true);
+    try {
+      if (window.electronAPI && typeof window.electronAPI.listPorts === 'function') {
+        const portList = await window.electronAPI.listPorts();
+        const safePorts = Array.isArray(portList) ? portList : [];
+        setPorts(safePorts);
+        if (safePorts.length > 0) {
+          let chosenPort = safePorts[0].port;
+          try {
+            const savedPort = localStorage.getItem('turbo_selected_port');
+            if (savedPort && safePorts.some((p) => p.port === savedPort)) {
+              chosenPort = savedPort;
+            }
+          } catch {}
+          setSelectedPort(chosenPort);
+        } else {
+          setSelectedPort('');
+        }
+      }
+    } catch (e) {
+      console.error('Falha ao atualizar portas:', e);
+    } finally {
+      setIsRefreshingPorts(false);
+    }
+  };
+
+  const refreshCliStatus = async () => {
+    try {
+      if (window.electronAPI && typeof window.electronAPI.getCliStatus === 'function') {
+        const status = await window.electronAPI.getCliStatus();
+        if (status && status.cores) {
+          setInstalledCores(status.cores);
+        }
+      }
+    } catch (e) {
+      console.error('Falha ao obter status do CLI:', e);
+    }
+  };
+
   useEffect(() => {
-    // 0. Carregar versão da aplicação e arquitetura
+    // =========================================================================
+    // PIPELINE DE INICIALIZAÇÃO PROGRESSIVA / ESCALONADA (STAGGERED PIPELINE)
+    // Evita concorrência massiva de I/O e processos no startup, eliminando o Not Responding.
+    // =========================================================================
+
+    // Estágio 0 (Imediato / 0ms): Dados leves em memória e listeners de eventos
     if (window.electronAPI && typeof window.electronAPI.getAppVersion === 'function') {
       window.electronAPI.getAppVersion().then((info) => {
         if (info) setVersionInfo(info);
       }).catch(() => {});
     }
 
-    // 0.1 Ouvir e verificar atualizações via rede local
-    if (window.electronAPI) {
-      if (typeof window.electronAPI.onUpdateAvailable === 'function') {
-        window.electronAPI.onUpdateAvailable((info) => {
-          if (info && info.available) {
-            setUpdateInfo(info);
+    let unsubUpdate: (() => void) | undefined;
+    if (window.electronAPI && typeof window.electronAPI.onUpdateAvailable === 'function') {
+      unsubUpdate = window.electronAPI.onUpdateAvailable((info) => {
+        if (info && info.available) {
+          setUpdateInfo(info);
+        }
+      });
+    }
+
+    const unsubLogs = window.electronAPI && typeof window.electronAPI.onLogOutput === 'function'
+      ? window.electronAPI.onLogOutput((data) => {
+          setLogs((prev) => [...prev, data]);
+
+          // Parse de uso de memória Flash
+          const flashMatch = data.text.match(/Sketch uses \d+ bytes \((\d+%)\)/i);
+          if (flashMatch) {
+            setFlashUsage(flashMatch[1]);
           }
+
+          // Parse de uso de memória RAM
+          const ramMatch = data.text.match(/Global variables use \d+ bytes \((\d+%)\)/i);
+          if (ramMatch) {
+            setRamUsage(ramMatch[1]);
+          }
+
+          const text = data.text;
+
+          // Atualização inteligente do monitor de processos em tempo real
+          if (text.includes('[COMPILAÇÃO TURBO]')) {
+            setActiveProcessStep((prev) => (prev <= 2 ? 2 : prev));
+            setProcessName('Compilação paralela C++ (Threads ativas)');
+            setProcessPercentage((p) => Math.max(p, 28));
+          } else if (text.includes('Compiling libraries') || text.includes('Compiling core')) {
+            setProcessName('Compilando bibliotecas e Core');
+            setProcessPercentage((p) => Math.max(p, 48));
+          } else if (text.includes('Linking everything together')) {
+            setProcessName('Linkando binário e gerando imagem Flash');
+            setProcessPercentage((p) => Math.max(p, 65));
+          } else if (text.includes('Connecting...') || (data.type === 'upload' && text.includes('Connecting'))) {
+            if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+            setActiveProcessStep(3);
+            setProcessName('Conectando ao chip via Serial (Bootloader)');
+            setProcessPercentage(72);
+          } else if (text.includes('Erasing flash')) {
+            setActiveProcessStep(3);
+            setProcessName('Apagando setores da memória Flash (3MB)');
+            setProcessPercentage(80);
+          } else if (text.includes('Writing at') || (data.type === 'upload' && /\b\d{1,3}\s*%/i.test(text))) {
+            setActiveProcessStep(4);
+            setProcessName('Gravando blocos na memória Flash');
+            const espMatch = text.match(/(?:Writing at 0x[0-9a-fA-F]+\.\.\.\s*\(|\()(\d{1,3})\s*%\)/i);
+            if (espMatch) {
+              const rawPct = parseInt(espMatch[1], 10);
+              if (!isNaN(rawPct)) {
+                const overallPct = 80 + Math.floor(rawPct * 0.19);
+                setProcessPercentage(Math.min(99, overallPct));
+              }
+            }
+          } else if (text.includes('Hash of data verified') || text.includes('Leaving...')) {
+            setActiveProcessStep(4);
+            setProcessName('Flash gravada e verificada com sucesso!');
+            setProcessPercentage(100);
+          }
+        })
+      : () => {};
+
+    // Estágio 1 (+350ms): Detecção das portas seriais após o primeiro frame limpo na tela
+    const timerStage1 = setTimeout(() => {
+      refreshPorts();
+    }, 350);
+
+    // Estágio 2 (+1200ms): Status de cores instalados pelo Arduino CLI em background
+    const timerStage2 = setTimeout(() => {
+      refreshCliStatus();
+    }, 1200);
+
+    // Estágio 3 (+2500ms): Sincronização do catálogo de placas (a interface já carregou do cache instantaneamente)
+    const timerStage3 = setTimeout(() => {
+      if (window.electronAPI && typeof window.electronAPI.listBoards === 'function') {
+        window.electronAPI.listBoards().then((boardList) => {
+          const safeList = Array.isArray(boardList) ? boardList : [];
+          setBoards(safeList);
+          try {
+            if (safeList.length > 0) {
+              localStorage.setItem('turbo_boards_cache', JSON.stringify(safeList));
+            }
+          } catch {}
+          if (safeList.length > 0) {
+            let chosenBoard = safeList[0];
+            try {
+              const savedFqbn = localStorage.getItem('turbo_selected_board_fqbn');
+              if (savedFqbn) {
+                const found = safeList.find((b) => b.fqbn === savedFqbn);
+                if (found) chosenBoard = found;
+              }
+            } catch {}
+            setSelectedBoard(chosenBoard);
+          }
+        }).catch((err) => {
+          console.warn('Falha ao obter lista de placas em segundo plano:', err);
         });
       }
-      if (typeof window.electronAPI.checkForUpdates === 'function') {
+    }, 2500);
+
+    // Estágio 4 (+4500ms): Checagem segura de atualizações no servidor local
+    const timerStage4 = setTimeout(() => {
+      if (window.electronAPI && typeof window.electronAPI.checkForUpdates === 'function') {
         window.electronAPI.checkForUpdates().then((res) => {
           if (res && res.available) {
             setUpdateInfo(res);
           }
         }).catch(() => {});
       }
-    }
-
-    // 1. Carregar lista de placas
-    window.electronAPI.listBoards().then((boardList) => {
-      const safeList = Array.isArray(boardList) ? boardList : [];
-      setBoards(safeList);
-      try {
-        if (safeList.length > 0) {
-          localStorage.setItem('turbo_boards_cache', JSON.stringify(safeList));
-        }
-      } catch {}
-      if (safeList.length > 0) {
-        let chosenBoard = safeList[0];
-        try {
-          const savedFqbn = localStorage.getItem('turbo_selected_board_fqbn');
-          if (savedFqbn) {
-            const found = safeList.find((b) => b.fqbn === savedFqbn);
-            if (found) chosenBoard = found;
-          }
-        } catch {}
-        setSelectedBoard(chosenBoard);
-      }
-    }).catch((err) => {
-      console.warn('Falha ao obter lista de placas:', err);
-    });
-
-    // 2. Carregar portas COM
-    refreshPorts();
-
-    // 3. Checar status do CLI e cores instalados
-    refreshCliStatus();
-
-    // 4. Ouvir logs em tempo real e extrair uso de memória (Flash e RAM) e progresso de Upload/Processos
-    const unsubLogs = window.electronAPI.onLogOutput((data) => {
-      setLogs((prev) => [...prev, data]);
-
-      // Parse de uso de memória Flash
-      const flashMatch = data.text.match(/Sketch uses \d+ bytes \((\d+%)\)/i);
-      if (flashMatch) {
-        setFlashUsage(flashMatch[1]);
-      }
-
-      // Parse de uso de memória RAM
-      const ramMatch = data.text.match(/Global variables use \d+ bytes \((\d+%)\)/i);
-      if (ramMatch) {
-        setRamUsage(ramMatch[1]);
-      }
-
-      const text = data.text;
-
-      // Atualização inteligente do monitor de processos em tempo real
-      if (text.includes('[COMPILAÇÃO TURBO]')) {
-        setActiveProcessStep((prev) => (prev <= 2 ? 2 : prev));
-        setProcessName('Compilação paralela C++ (Threads ativas)');
-        setProcessPercentage((p) => Math.max(p, 28));
-      } else if (text.includes('Compiling libraries') || text.includes('Compiling core')) {
-        setProcessName('Compilando bibliotecas e Core');
-        setProcessPercentage((p) => Math.max(p, 48));
-      } else if (text.includes('Linking everything together')) {
-        setProcessName('Linkando binário e gerando imagem Flash');
-        setProcessPercentage((p) => Math.max(p, 65));
-      } else if (text.includes('Connecting...') || (data.type === 'upload' && text.includes('Connecting'))) {
-        if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-        setActiveProcessStep(3);
-        setProcessName('Conectando ao chip via Serial (Bootloader)');
-        setProcessPercentage(72);
-      } else if (text.includes('Erasing flash')) {
-        setActiveProcessStep(3);
-        setProcessName('Apagando setores da memória Flash (3MB)');
-        setProcessPercentage(80);
-      } else if (text.includes('Writing at') || (data.type === 'upload' && /\b\d{1,3}\s*%/i.test(text))) {
-        setActiveProcessStep(4);
-        setProcessName('Gravando blocos na memória Flash');
-        const espMatch = text.match(/(?:Writing at 0x[0-9a-fA-F]+\.\.\.\s*\(|\()(\d{1,3})\s*%\)/i);
-        if (espMatch) {
-          const rawPct = parseInt(espMatch[1], 10);
-          if (!isNaN(rawPct)) {
-            const overallPct = 80 + Math.floor(rawPct * 0.19);
-            setProcessPercentage(Math.min(99, overallPct));
-          }
-        }
-      } else if (text.includes('Hash of data verified') || text.includes('Leaving...')) {
-        setActiveProcessStep(4);
-        setProcessName('Flash gravada e verificada com sucesso!');
-        setProcessPercentage(100);
-      }
-    });
+    }, 4500);
 
     return () => {
       unsubLogs();
+      if (unsubUpdate) unsubUpdate();
+      clearTimeout(timerStage1);
+      clearTimeout(timerStage2);
+      clearTimeout(timerStage3);
+      clearTimeout(timerStage4);
     };
   }, []);
 
@@ -269,42 +330,6 @@ export const App: React.FC = () => {
     }
     // Desconecta a porta serial anterior para liberar recursos e travas do SO
     window.electronAPI.disconnectSerial();
-  };
-
-  const refreshPorts = async () => {
-    setIsRefreshingPorts(true);
-    try {
-      const portList = await window.electronAPI.listPorts();
-      const safePorts = Array.isArray(portList) ? portList : [];
-      setPorts(safePorts);
-      if (safePorts.length > 0) {
-        let chosenPort = safePorts[0].port;
-        try {
-          const savedPort = localStorage.getItem('turbo_selected_port');
-          if (savedPort && safePorts.some((p) => p.port === savedPort)) {
-            chosenPort = savedPort;
-          }
-        } catch {}
-        setSelectedPort(chosenPort);
-      } else {
-        setSelectedPort('');
-      }
-    } catch (e) {
-      console.error('Falha ao atualizar portas:', e);
-    } finally {
-      setIsRefreshingPorts(false);
-    }
-  };
-
-  const refreshCliStatus = async () => {
-    try {
-      const status = await window.electronAPI.getCliStatus();
-      if (status && status.cores) {
-        setInstalledCores(status.cores);
-      }
-    } catch (e) {
-      console.error('Falha ao obter status do CLI:', e);
-    }
   };
 
   // Gerenciamento de Abas do Sketch

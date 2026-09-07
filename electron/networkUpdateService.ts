@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import net from 'net';
 import { spawn } from 'child_process';
 import { app } from 'electron';
 import { getAppVersionInfo } from './version';
@@ -30,6 +31,68 @@ export interface CheckUpdateResult {
   error?: string;
 }
 
+/**
+ * Testa se um host (IP ou hostname) está acessível na rede via TCP (ex: porta SMB 445)
+ * com timeout ultracurto para jamais travar o thread do Node/Electron.
+ */
+function isHostReachable(host: string, port = 445, timeoutMs = 500): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    let finished = false;
+
+    const finish = (val: boolean) => {
+      if (!finished) {
+        finished = true;
+        socket.destroy();
+        resolve(val);
+      }
+    };
+
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+
+    try {
+      socket.connect(port, host);
+    } catch {
+      finish(false);
+    }
+  });
+}
+
+/**
+ * Verifica se um caminho está acessível de forma 100% assíncrona
+ * e com timeout protetivo para evitar bloqueio em caminhos UNC ou unidades desconectadas.
+ */
+function checkPathAccessible(dirPath: string, timeoutMs = 600): Promise<boolean> {
+  return new Promise((resolve) => {
+    let finished = false;
+    const timer = setTimeout(() => {
+      if (!finished) {
+        finished = true;
+        resolve(false);
+      }
+    }, timeoutMs);
+
+    fs.promises.stat(dirPath)
+      .then((stat) => {
+        if (!finished) {
+          finished = true;
+          clearTimeout(timer);
+          resolve(true);
+        }
+      })
+      .catch(() => {
+        if (!finished) {
+          finished = true;
+          clearTimeout(timer);
+          resolve(false);
+        }
+      });
+  });
+}
+
 export class NetworkUpdateService {
   private candidateServerDirs: string[] = [
     'Z:\\Updates Turbo IDE',
@@ -37,16 +100,34 @@ export class NetworkUpdateService {
   ];
 
   /**
-   * Localiza a pasta de updates acessível na rede local
+   * Localiza a pasta de updates acessível na rede local de forma 100% assíncrona e não-bloqueante
    */
-  public resolveUpdateDirectory(): string | null {
+  public async resolveUpdateDirectory(): Promise<string | null> {
+    // 1. Suporte a diretório local customizado via variável de ambiente (para testes locais)
+    const customDir = process.env.TURBO_UPDATE_DIR;
+    if (customDir) {
+      const customExists = await checkPathAccessible(customDir, 600);
+      if (customExists) return customDir;
+    }
+
+    // 2. Verificação ultrarrápida do servidor SMB local (192.168.3.74:445)
+    // Se não estiver na rede local (ex: computador do primo ou café), aborta imediatamente em 400ms
+    // sem invocar chamadas de filesystem em Z: ou UNC, eliminando qualquer risco de travamento "(Not Responding)" no Windows.
+    const smbHost = '192.168.3.74';
+    const isLocalServerOnline = await isHostReachable(smbHost, 445, 400);
+    if (!isLocalServerOnline) {
+      diagnostics.logSystem(`[AutoUpdater] Servidor local (${smbHost}) inacessível (computador externo ou offline). Verificação cancelada com segurança.`);
+      return null;
+    }
+
     for (const dir of this.candidateServerDirs) {
       try {
-        if (fs.existsSync(dir)) {
+        const exists = await checkPathAccessible(dir, 600);
+        if (exists) {
           return dir;
         }
       } catch (err) {
-        // Ignora falhas de timeout em caminhos offline
+        // Ignora falhas de acesso
       }
     }
     return null;
@@ -57,18 +138,19 @@ export class NetworkUpdateService {
    */
   public async checkForUpdates(): Promise<CheckUpdateResult> {
     const currentInfo = getAppVersionInfo();
-    const updateDir = this.resolveUpdateDirectory();
+    const updateDir = await this.resolveUpdateDirectory();
 
     if (!updateDir) {
       return {
         available: false,
         currentInfo,
-        error: 'Servidor local não encontrado (Z:\\Updates Turbo IDE inacessível).'
+        error: 'Servidor local não encontrado ou offline.'
       };
     }
 
     const manifestPath = path.join(updateDir, 'updates.json');
-    if (!fs.existsSync(manifestPath)) {
+    const manifestExists = await checkPathAccessible(manifestPath, 600);
+    if (!manifestExists) {
       return {
         available: false,
         currentInfo,
@@ -77,7 +159,7 @@ export class NetworkUpdateService {
     }
 
     try {
-      const raw = fs.readFileSync(manifestPath, 'utf-8').replace(/^\uFEFF/, '');
+      const raw = (await fs.promises.readFile(manifestPath, 'utf-8')).replace(/^\uFEFF/, '');
       const manifest: UpdateManifest = JSON.parse(raw);
       const archKey = currentInfo.arch; // 'arm64' ou 'x64'
       const serverEntry = manifest[archKey];
@@ -104,7 +186,9 @@ export class NetworkUpdateService {
       const isVersionHigher = sMaj > cMaj || (sMaj === cMaj && (sMin > cMin || (sMin === cMin && sPat > cPat)));
       const isNewer = (serverEntry.build > currentInfo.build) || (serverEntry.build === currentInfo.build && isVersionHigher);
 
-      if (isNewer && fs.existsSync(installerPath)) {
+      const installerExists = isNewer ? await checkPathAccessible(installerPath, 800) : false;
+
+      if (isNewer && installerExists) {
         diagnostics.logSystem(`[AutoUpdater] Nova atualização detectada: v${serverEntry.version} (Build #${serverEntry.build})`);
         return {
           available: true,

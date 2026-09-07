@@ -1,26 +1,24 @@
 {
   "arm64": {
-    "version": "0.2.5",
-    "build": 25,
+    "version": "0.2.6",
+    "build": 26,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Latência Zero no ARM64: Eliminação definitiva do delay de clique em placas e portas com sondagem ultrarrápida (20ms) e cache inteligente.",
-      "Menu de Partições Refinado (Huge App): Novo layout espaçoso e legível no estilo do seletor de portas, com cards destacados e badges claros.",
-      "Renderização Otimizada: Remoção de gargalos de backdrop-filter e limitação inteligente de renderização inicial no thread principal.",
-      "Touch & Trackpad Instantâneo: Remoção de latência de 300ms de toque em telas sensíveis e touchpads no Windows."
+      "Inicialização Progressiva (Staggered Startup): Carregamento em 4 estágios escalonados para garantir abertura fluida e eliminar o congelamento '(Not Responding)' no Windows.",
+      "Proteção de Rede Ultrarrápida (Zero-Freeze): Sondagem não-bloqueante por socket TCP que aborta chamadas SMB/UNC em 400ms quando executado fora da rede local.",
+      "Sincronização Assíncrona do Auto-Updater: Leitura segura de manifesto e instaladores sem bloquear o thread principal do Electron."
     ]
   },
   "x64": {
-    "version": "0.2.2",
-    "build": 22,
+    "version": "0.2.3",
+    "build": 23,
     "target": "Windows x64",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Latência Zero no ARM64: Eliminação definitiva do delay de clique em placas e portas com sondagem ultrarrápida (20ms) e cache inteligente.",
-      "Menu de Partições Refinado (Huge App): Novo layout espaçoso e legível no estilo do seletor de portas, com cards destacados e badges claros.",
-      "Renderização Otimizada: Remoção de gargalos de backdrop-filter e limitação inteligente de renderização inicial no thread principal.",
-      "Touch & Trackpad Instantâneo: Remoção de latência de 300ms de toque em telas sensíveis e touchpads no Windows."
+      "Inicialização Progressiva (Staggered Startup): Carregamento em 4 estágios escalonados para garantir abertura fluida e eliminar o congelamento '(Not Responding)' no Windows.",
+      "Proteção de Rede Ultrarrápida (Zero-Freeze): Sondagem não-bloqueante por socket TCP que aborta chamadas SMB/UNC em 400ms quando executado fora da rede local.",
+      "Sincronização Assíncrona do Auto-Updater: Leitura segura de manifesto e instaladores sem bloquear o thread principal do Electron."
     ]
   }
 }

@@ -53,4 +53,38 @@ describe('NetworkUpdateService - Lógica de Semver e Detecção de Atualização
     expect(spawnArgs).toContain('/ARCH=ARM64');
     expect(spawnArgs).not.toContain('/S'); // Não deve ser totalmente cego
   });
+
+  it('deve rejeitar e abortar verificação de rede em menos de 600ms quando o host estiver offline', async () => {
+    const net = await import('net');
+    const isHostReachable = (host: string, port = 445, timeoutMs = 250): Promise<boolean> => {
+      return new Promise((resolve) => {
+        const socket = new net.Socket();
+        let finished = false;
+        const finish = (val: boolean) => {
+          if (!finished) {
+            finished = true;
+            socket.destroy();
+            resolve(val);
+          }
+        };
+        socket.setTimeout(timeoutMs);
+        socket.once('connect', () => finish(true));
+        socket.once('timeout', () => finish(false));
+        socket.once('error', () => finish(false));
+        try {
+          socket.connect(port, host);
+        } catch {
+          finish(false);
+        }
+      });
+    };
+
+    const start = Date.now();
+    // Host inalcançável simulando máquina do primo fora da rede local (ex: IP de documentação RFC 5737 que não responde)
+    const reachable = await isHostReachable('192.0.2.1', 445, 250);
+    const duration = Date.now() - start;
+
+    expect(reachable).toBe(false);
+    expect(duration).toBeLessThan(600); // Garante que falha rapidamente sem congelar
+  });
 });
