@@ -51,11 +51,29 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen || !updateInfo) return null;
+  const serverInfo = updateInfo?.serverInfo;
+  const currentInfo = updateInfo?.currentInfo;
+  const networkLocation = updateInfo?.networkLocation || 'Z:\\Updates Turbo IDE';
 
-  const serverInfo = updateInfo.serverInfo;
-  const currentInfo = updateInfo.currentInfo;
-  const networkLocation = updateInfo.networkLocation || 'Z:\\Updates Turbo IDE';
+  const changelogItems: string[] = React.useMemo(() => {
+    const raw = serverInfo?.changelog;
+    if (Array.isArray(raw)) {
+      return raw.map((item) => String(item).trim()).filter(Boolean);
+    }
+    if (typeof raw === 'string' && raw.trim().length > 0) {
+      if (raw.includes('\n')) {
+        return raw.split('\n').map((s) => s.trim()).filter(Boolean);
+      }
+      if (raw.includes('|')) {
+        return raw.split('|').map((s) => s.trim()).filter(Boolean);
+      }
+      return [raw.trim()];
+    }
+    return [
+      'Atualização de estabilidade e desempenho para Windows ARM64 e x64.',
+      'Atualização silenciosa em segundo plano com reinício automático.'
+    ];
+  }, [serverInfo?.changelog]);
 
   const handleInstall = async () => {
     setIsUpdating(true);
@@ -87,26 +105,6 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  const changelogItems: string[] = React.useMemo(() => {
-    const raw = serverInfo?.changelog;
-    if (Array.isArray(raw)) {
-      return raw.map((item) => String(item).trim()).filter(Boolean);
-    }
-    if (typeof raw === 'string' && raw.trim().length > 0) {
-      if (raw.includes('\n')) {
-        return raw.split('\n').map((s) => s.trim()).filter(Boolean);
-      }
-      if (raw.includes('|')) {
-        return raw.split('|').map((s) => s.trim()).filter(Boolean);
-      }
-      return [raw.trim()];
-    }
-    return [
-      'Atualização de estabilidade e desempenho para Windows ARM64 e x64.',
-      'Atualização silenciosa em segundo plano com reinício automático.'
-    ];
-  }, [serverInfo?.changelog]);
-
   const renderChangelogItem = (rawText: string, index: number) => {
     const clean = rawText.replace(/^[-*•]\s*/, '').trim();
     const colonIndex = clean.indexOf(':');
@@ -126,6 +124,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
       </li>
     );
   };
+
+  if (!isOpen || !updateInfo) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-fadeIn">

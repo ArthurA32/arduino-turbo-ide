@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.0117061">
+    <testsuite name="tests/backend/nativeSerialSafety.test.ts" timestamp="2026-09-07T20:18:49.922Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0034385">
+        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; deve exigir liberação serial silenciosa disconnect(true) antes de qualquer upload ou leitura" time="0.0019052">
+        </testcase>
+        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; não deve emitir desconexão ruidosa quando silent=true para não resetar estado do UI desnecessariamente" time="0.0002287">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/backend/networkUpdateService.test.ts" timestamp="2026-09-07T20:18:49.926Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.0043749">
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve detectar atualização quando a versão do servidor for maior" time="0.0016256">
+        </testcase>
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve rejeitar atualizações para versões menores ou iguais (prevenção de downgrade)" time="0.0002168">
+        </testcase>
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve herdar changelog universal quando a entrada específica não tiver definido" time="0.0002759">
+        </testcase>
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve configurar o modo /UPDATE com argumentos de auto-restart corretos" time="0.0008897">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/backend/version.test.ts" timestamp="2026-09-07T20:18:49.928Z" hostname="WIN-BFB7PNSPVLR" tests="3" failures="0" errors="0" skipped="0" time="0.0038927">
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve existir o arquivo src/version.json com estrutura válida para ARM64 e x64" time="0.002129">
+        </testcase>
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve conter campo de changelog não vazio para ambas as arquiteturas" time="0.0003345">
+        </testcase>
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve detectar a arquitetura corretamente a partir de variáveis de ambiente do Windows" time="0.0002025">
+        </testcase>
+    </testsuite>
+</testsuites>

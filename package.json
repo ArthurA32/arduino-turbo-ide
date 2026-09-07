@@ -12,7 +12,12 @@
     "build:arm64": "node scripts/build-and-export.js --arch=arm64",
     "build:all": "node scripts/build-and-export.js --arch=all",
     "bump:arm64": "node scripts/bump-version.js --arch=arm64",
-    "bump:x64": "node scripts/bump-version.js --arch=x64"
+    "bump:x64": "node scripts/bump-version.js --arch=x64",
+    "test:backend": "vitest run tests/backend --reporter=junit --outputFile=./reports/backend-junit.xml",
+    "test:frontend": "vitest run tests/frontend --reporter=junit --outputFile=./reports/frontend-junit.xml",
+    "test:e2e": "vitest run tests/e2e --reporter=junit --outputFile=./reports/e2e-junit.xml",
+    "test:all": "vitest run --reporter=junit --outputFile=./reports/all-junit.xml",
+    "test:report": "node scripts/consolidar-relatorio.js"
   },
   "keywords": [
     "arduino",
@@ -34,6 +39,7 @@
     "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^22.13.9",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
@@ -41,11 +47,14 @@
     "autoprefixer": "^10.4.21",
     "electron": "^35.0.0",
     "electron-builder": "^25.1.8",
+    "fast-xml-parser": "^5.11.1",
+    "jsdom": "^30.0.1",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.2",
     "vite": "^6.2.0",
     "vite-plugin-electron": "^0.29.0",
-    "vite-plugin-electron-renderer": "^0.14.6"
+    "vite-plugin-electron-renderer": "^0.14.6",
+    "vitest": "^5.0.0"
   }
 }

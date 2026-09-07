@@ -325,7 +325,7 @@ export const SerialTerminal: React.FC<SerialTerminalProps> = ({
           ) : (
             <button
               onClick={handleConnect}
-              disabled={isUploading || isConnecting || (!selectedPort && ports.length === 0)}
+              disabled={isUploading || isConnecting || (!selectedPort && (!ports || ports.length === 0))}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#00979C] hover:bg-[#00B4B9] text-white font-sans text-xs transition-colors shadow-sm disabled:opacity-50"
             >
               <Play className="w-3 h-3 fill-current" />
@@ -347,7 +347,7 @@ export const SerialTerminal: React.FC<SerialTerminalProps> = ({
               disabled={isConnected}
               className="bg-[#1E1E1E] border border-[#3E3E42] rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
             >
-              {ports.length === 0 ? (
+              {!ports || ports.length === 0 ? (
                 <option value="">Nenhuma porta</option>
               ) : (
                 ports.map((p: any) => (
