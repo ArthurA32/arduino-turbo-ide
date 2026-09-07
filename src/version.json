@@ -1,7 +1,7 @@
 {
   "arm64": {
-    "version": "0.1.7",
-    "build": 17,
+    "version": "0.1.8",
+    "build": 18,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07"
   },
