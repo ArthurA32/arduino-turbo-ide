@@ -71,70 +71,70 @@ export interface BoardOption {
 }
 
 export const POPULAR_BOARDS: BoardOption[] = [
-  // Família ESP32 (Otimizados com Flash DIO, USB CDC e sem falha de PSRAM)
+  // Família ESP32 (Otimizados com Flash DIO, 3MB Flash Huge App, USB CDC e sem falha de PSRAM)
   { 
-    name: 'ESP32-C5 Dev Module (Recomendado - USB CDC)', 
-    fqbn: 'esp32:esp32:esp32c5:FlashMode=dio,CDCOnBoot=cdc,PSRAM=disabled', 
+    name: 'ESP32-C5 Dev Module (Recomendado - USB CDC / 3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32c5:FlashMode=dio,CDCOnBoot=cdc,PSRAM=disabled,PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'ESP32-C5 Dev Module (Padrão)', 
-    fqbn: 'esp32:esp32:esp32c5:FlashMode=dio,PSRAM=disabled', 
+    name: 'ESP32-C5 Dev Module (Padrão / 3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32c5:FlashMode=dio,PSRAM=disabled,PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'ESP32-C6 Dev Module (USB CDC)', 
-    fqbn: 'esp32:esp32:esp32c6:FlashMode=dio,CDCOnBoot=cdc,PSRAM=disabled', 
+    name: 'ESP32-C6 Dev Module (USB CDC / 3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32c6:FlashMode=dio,CDCOnBoot=cdc,PSRAM=disabled,PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'ESP32-C3 Dev Module (USB CDC)', 
-    fqbn: 'esp32:esp32:esp32c3:FlashMode=dio,CDCOnBoot=cdc', 
+    name: 'ESP32-C3 Dev Module (USB CDC / 3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32c3:FlashMode=dio,CDCOnBoot=cdc,PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'ESP32-S3 Dev Module (USB CDC)', 
-    fqbn: 'esp32:esp32:esp32s3:FlashMode=dio,CDCOnBoot=cdc', 
+    name: 'ESP32-S3 Dev Module (USB CDC / 3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32s3:FlashMode=dio,CDCOnBoot=cdc,PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'ESP32-S2 Dev Module (USB CDC)', 
-    fqbn: 'esp32:esp32:esp32s2:FlashMode=dio,CDCOnBoot=cdc', 
+    name: 'ESP32-S2 Dev Module (USB CDC / 3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32s2:FlashMode=dio,CDCOnBoot=cdc,PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'ESP32-H2 Dev Module', 
-    fqbn: 'esp32:esp32:esp32h2:FlashMode=dio,CDCOnBoot=cdc', 
+    name: 'ESP32-H2 Dev Module (3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32h2:FlashMode=dio,CDCOnBoot=cdc,PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'ESP32 Dev Module (Clássico ESP32 WROOM)', 
-    fqbn: 'esp32:esp32:esp32:FlashMode=dio', 
+    name: 'ESP32 Dev Module (Clássico ESP32 WROOM / 3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32:FlashMode=dio,PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'NodeMCU-32S', 
-    fqbn: 'esp32:esp32:nodemcu-32s', 
+    name: 'NodeMCU-32S (3MB Flash)', 
+    fqbn: 'esp32:esp32:nodemcu-32s:PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'ESP32-CAM', 
-    fqbn: 'esp32:esp32:esp32cam', 
+    name: 'ESP32-CAM (3MB Flash)', 
+    fqbn: 'esp32:esp32:esp32cam:PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
   { 
-    name: 'Arduino Nano ESP32', 
-    fqbn: 'arduino:esp32:nano_nora', 
+    name: 'Arduino Nano ESP32 (3MB Flash)', 
+    fqbn: 'arduino:esp32:nano_nora:PartitionScheme=huge_app', 
     platform: 'esp32', 
     family: 'ESP32' 
   },
@@ -739,6 +739,22 @@ export class ArduinoCliService {
     }
   }
 
+  public injectPartitionScheme(fqbn: string, scheme: string): string {
+    if (!fqbn || !fqbn.includes('esp32') || !scheme) return fqbn;
+
+    if (/PartitionScheme=[^,:]+/i.test(fqbn)) {
+      return fqbn.replace(/PartitionScheme=[^,:]+/i, `PartitionScheme=${scheme}`);
+    }
+
+    const colonCount = (fqbn.match(/:/g) || []).length;
+    if (colonCount >= 3) {
+      return `${fqbn},PartitionScheme=${scheme}`;
+    } else if (colonCount === 2) {
+      return `${fqbn}:PartitionScheme=${scheme}`;
+    }
+    return fqbn;
+  }
+
   public async compile(
     sketchCode: string,
     fqbn: string,
@@ -806,7 +822,22 @@ export class ArduinoCliService {
           diagnostics.logCompilation(`Compilação turbo bem-sucedida em ${elapsed}s`);
           resolve({ success: true, buildDir: TURBO_BUILD_DIR });
         } else {
-          // Auto-Healer: Verificar se há bibliotecas faltantes e instalar automaticamente
+          // Auto-Healer 1: Verificar se houve estouro de partição da memória Flash no ESP32
+          const isFlashOverflow = /text section exceeds available space|exceeds available space in board|section `\.iram0\.text' will not fit|region `iram0_0_seg' overflowed/i.test(fullOutput);
+          if (isFlashOverflow && fqbn.includes('esp32') && !fqbn.includes('PartitionScheme=huge_app') && attempt < 3) {
+            const hugeAppFqbn = this.injectPartitionScheme(fqbn, 'huge_app');
+            onOutput(`\n=================================================================\n` +
+              `🚀 [AUTO-HEALER]: Detectado estouro de partição padrão da Flash (App > 1.3MB)!\n` +
+              `🔧 [AUTO-HEALER]: Expandindo automaticamente para Partição 'Huge App' (3.14MB livres de Flash)...\n` +
+              `🔄 [AUTO-HEALER]: Recompilando com FQBN Otimizado: ${hugeAppFqbn}...\n` +
+              `=================================================================\n\n`);
+            diagnostics.logCompilation(`Auto-Healer acionado: Flash Overflow expandido para huge_app`);
+            const retryResult = await this.compile(sketchCode, hugeAppFqbn, onOutput, attempt + 1);
+            resolve(retryResult);
+            return;
+          }
+
+          // Auto-Healer 2: Verificar se há bibliotecas faltantes e instalar automaticamente
           const missingHeaders = this.extractMissingHeaders(fullOutput);
           if (missingHeaders.length > 0 && attempt < 3) {
             onOutput(`\n🔄 [AUTO-HEALER] Tentativa ${attempt + 1}/3 de resolução automática de dependências...\n`);
@@ -1189,7 +1220,22 @@ export class ArduinoCliService {
           diagnostics.logCompilation(`Compilação multi-abas turbo bem-sucedida em ${elapsed}s`);
           resolve({ success: true, buildDir: TURBO_BUILD_DIR });
         } else {
-          // Auto-Healer: Verificar se há bibliotecas faltantes e instalar automaticamente
+          // Auto-Healer 1: Verificar se houve estouro de partição da memória Flash no ESP32
+          const isFlashOverflow = /text section exceeds available space|exceeds available space in board|section `\.iram0\.text' will not fit|region `iram0_0_seg' overflowed/i.test(fullOutput);
+          if (isFlashOverflow && fqbn.includes('esp32') && !fqbn.includes('PartitionScheme=huge_app') && attempt < 3) {
+            const hugeAppFqbn = this.injectPartitionScheme(fqbn, 'huge_app');
+            onOutput(`\n=================================================================\n` +
+              `🚀 [AUTO-HEALER]: Detectado estouro de partição padrão da Flash (App > 1.3MB)!\n` +
+              `🔧 [AUTO-HEALER]: Expandindo automaticamente para Partição 'Huge App' (3.14MB livres de Flash)...\n` +
+              `🔄 [AUTO-HEALER]: Recompilando com FQBN Otimizado: ${hugeAppFqbn}...\n` +
+              `=================================================================\n\n`);
+            diagnostics.logCompilation(`Auto-Healer acionado: Flash Overflow expandido para huge_app`);
+            const retryResult = await this.compileMultiFiles(files, hugeAppFqbn, onOutput, attempt + 1);
+            resolve(retryResult);
+            return;
+          }
+
+          // Auto-Healer 2: Verificar se há bibliotecas faltantes e instalar automaticamente
           const missingHeaders = this.extractMissingHeaders(fullOutput);
           if (missingHeaders.length > 0 && attempt < 3) {
             onOutput(`\n🔄 [AUTO-HEALER] Tentativa ${attempt + 1}/3 de resolução automática de dependências...\n`);

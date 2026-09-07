@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cpu, Usb, CheckCircle2, AlertCircle, Loader2, HardDrive, Database } from 'lucide-react';
+import { Cpu, Usb, CheckCircle2, AlertCircle, Loader2, HardDrive, Database, Layers } from 'lucide-react';
 
 interface StatusBarProps {
   isCompiling: boolean;
@@ -9,6 +9,9 @@ interface StatusBarProps {
   flashUsage?: string;
   ramUsage?: string;
   statusMessage?: string;
+  uploadProgress?: number | null;
+  uploadStatusText?: string;
+  partitionSchemeLabel?: string;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -18,7 +21,10 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   selectedPort,
   flashUsage,
   ramUsage,
-  statusMessage
+  statusMessage,
+  uploadProgress,
+  uploadStatusText,
+  partitionSchemeLabel
 }) => {
   return (
     <footer className="h-6 bg-[#16161D] border-t border-[#2B2B36] flex items-center justify-between px-3 text-[11px] text-gray-400 select-none z-30 font-sans">
@@ -48,11 +54,21 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             </div>
           </div>
         ) : isUploading ? (
-          <div className="flex items-center gap-1.5 text-[#E47128]">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            <span>Gravando na memória Flash...</span>
-            <div className="w-16 h-1.5 bg-[#2B2B36] rounded-full overflow-hidden ml-1">
-              <div className="h-full bg-[#E47128] animate-pulse w-full rounded-full" />
+          <div className="flex items-center gap-2 text-[#E47128]">
+            <Loader2 className="w-3 h-3 animate-spin shrink-0 text-[#FF8C38]" />
+            <span className="font-medium truncate max-w-[220px]">
+              {uploadStatusText || 'Gravando na memória Flash...'}
+            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <div className="w-28 h-2 bg-[#2B2B36] rounded-full overflow-hidden border border-[#3A2820] shadow-inner">
+                <div
+                  className="h-full bg-gradient-to-r from-[#E47128] via-[#FF8C38] to-[#00E5FF] rounded-full transition-all duration-150 ease-out shadow-sm"
+                  style={{ width: `${Math.max(uploadProgress ?? 5, 5)}%` }}
+                />
+              </div>
+              <span className="font-mono text-[10px] font-bold text-[#FF8C38] min-w-[32px] text-right">
+                {uploadProgress !== null && uploadProgress !== undefined ? `${uploadProgress}%` : '...'}
+              </span>
             </div>
           </div>
         ) : statusMessage ? (
@@ -69,6 +85,16 @@ export const StatusBar: React.FC<StatusBarProps> = ({
 
       {/* Lado Direito: Uso de Memória Flash e RAM */}
       <div className="flex items-center gap-3">
+        {partitionSchemeLabel && (
+          <div 
+            className="flex items-center gap-1 text-amber-300 font-mono text-[10px] bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-800/40"
+            title="Esquema de Partição da Memória Flash (ESP32)"
+          >
+            <Layers className="w-3 h-3 text-amber-400" />
+            <span>{partitionSchemeLabel}</span>
+          </div>
+        )}
+
         {flashUsage && (
           <div className="flex items-center gap-1 text-gray-300 font-mono" title="Uso da Memória Flash do Microcontrolador">
             <HardDrive className="w-3 h-3 text-[#00B4B9]" />

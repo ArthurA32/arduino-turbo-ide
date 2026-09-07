@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TopBar } from './components/TopBar';
 import { Editor } from './components/Editor';
 import { ConsoleDrawer } from './components/ConsoleDrawer';
@@ -40,6 +40,21 @@ export const App: React.FC = () => {
   const [isCompiling, setIsCompiling] = useState<boolean>(false);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isExportingBinary, setIsExportingBinary] = useState<boolean>(false);
+
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadStatusText, setUploadStatusText] = useState<string>('');
+  const [partitionScheme, setPartitionScheme] = useState<string>(() => {
+    try {
+      return localStorage.getItem('turbo_partition_scheme') || 'huge_app';
+    } catch {
+      return 'huge_app';
+    }
+  });
+
+  const isUploadingRef = useRef<boolean>(false);
+  useEffect(() => {
+    isUploadingRef.current = isUploading;
+  }, [isUploading]);
 
   const [flashUsage, setFlashUsage] = useState<string>('');
   const [ramUsage, setRamUsage] = useState<string>('');
@@ -86,7 +101,7 @@ export const App: React.FC = () => {
     // 3. Checar status do CLI e cores instalados
     refreshCliStatus();
 
-    // 4. Ouvir logs em tempo real e extrair uso de memória (Flash e RAM)
+    // 4. Ouvir logs em tempo real e extrair uso de memória (Flash e RAM) e progresso de Upload
     const unsubLogs = window.electronAPI.onLogOutput((data) => {
       setLogs((prev) => [...prev, data]);
 
@@ -100,6 +115,54 @@ export const App: React.FC = () => {
       const ramMatch = data.text.match(/Global variables use \d+ bytes \((\d+%)\)/i);
       if (ramMatch) {
         setRamUsage(ramMatch[1]);
+      }
+
+      // Parse dinâmico de progresso de gravação Flash (esptool e avrdude)
+      const text = data.text;
+      if (data.type === 'upload' || isUploadingRef.current) {
+        if (/Connecting\.\.\./i.test(text)) {
+          setUploadStatusText('Conectando à placa via Serial...');
+          setUploadProgress((prev) => (prev === null || prev < 5 ? 5 : prev));
+        } else if (/Erasing flash/i.test(text)) {
+          setUploadStatusText('Apagando setores da Flash...');
+          setUploadProgress((prev) => (prev === null || prev < 15 ? 15 : prev));
+        } else if (/Writing at 0x/i.test(text) || /\b\d{1,3}\s*%/i.test(text)) {
+          // Captura porcentagens do esptool (ex: Writing at 0x00010000... (42 %))
+          const espMatches = [...text.matchAll(/(?:Writing at 0x[0-9a-fA-F]+\.\.\.\s*\(|\()(\d{1,3})\s*%\)/gi)];
+          if (espMatches.length > 0) {
+            const lastPct = parseInt(espMatches[espMatches.length - 1][1], 10);
+            if (!isNaN(lastPct) && lastPct >= 0 && lastPct <= 100) {
+              setUploadProgress(lastPct);
+              setUploadStatusText(`Gravando na memória Flash (${lastPct}%)...`);
+            }
+          } else {
+            // Captura porcentagens do avrdude (ex: Writing | ####### | 45%)
+            const avrMatches = [...text.matchAll(/Writing\s*\|\s*#*\s*\|\s*(\d{1,3})%/gi)];
+            if (avrMatches.length > 0) {
+              const lastPct = parseInt(avrMatches[avrMatches.length - 1][1], 10);
+              if (!isNaN(lastPct) && lastPct >= 0 && lastPct <= 100) {
+                setUploadProgress(lastPct);
+                setUploadStatusText(`Gravando Flash AVR (${lastPct}%)...`);
+              }
+            } else {
+              // Genérico
+              const genericMatches = [...text.matchAll(/\b(\d{1,3})\s*%/g)];
+              if (genericMatches.length > 0 && text.toLowerCase().includes('writing')) {
+                const lastPct = parseInt(genericMatches[genericMatches.length - 1][1], 10);
+                if (!isNaN(lastPct) && lastPct >= 0 && lastPct <= 100) {
+                  setUploadProgress(lastPct);
+                  setUploadStatusText(`Gravando Flash (${lastPct}%)...`);
+                }
+              }
+            }
+          }
+        } else if (/Hash of data verified|flash verified|Leaving\.\.\./i.test(text)) {
+          setUploadProgress(100);
+          setUploadStatusText('Flash gravada com sucesso (100%)');
+        } else if (/Hard resetting/i.test(text)) {
+          setUploadProgress(100);
+          setUploadStatusText('Reiniciando microcontrolador...');
+        }
       }
     });
 
@@ -198,6 +261,28 @@ export const App: React.FC = () => {
     });
   };
 
+  const handlePartitionSchemeChange = (scheme: string) => {
+    setPartitionScheme(scheme);
+    try {
+      localStorage.setItem('turbo_partition_scheme', scheme);
+    } catch {}
+  };
+
+  const getEffectiveFqbn = (baseFqbn: string) => {
+    if (!baseFqbn || !baseFqbn.includes('esp32')) return baseFqbn;
+    const scheme = partitionScheme || 'huge_app';
+    if (/PartitionScheme=[^,:]+/i.test(baseFqbn)) {
+      return baseFqbn.replace(/PartitionScheme=[^,:]+/i, `PartitionScheme=${scheme}`);
+    }
+    const colonCount = (baseFqbn.match(/:/g) || []).length;
+    if (colonCount >= 3) {
+      return `${baseFqbn},PartitionScheme=${scheme}`;
+    } else if (colonCount === 2) {
+      return `${baseFqbn}:PartitionScheme=${scheme}`;
+    }
+    return baseFqbn;
+  };
+
   // Ação: Compilar (Multi-Abas)
   const handleCompile = async () => {
     if (!selectedBoard) {
@@ -205,6 +290,7 @@ export const App: React.FC = () => {
       return;
     }
 
+    const targetFqbn = getEffectiveFqbn(selectedBoard.fqbn);
     setIsCompiling(true);
     setStatusMessage('Indexando e compilando arquivos...');
     setDrawerTab('console');
@@ -213,14 +299,14 @@ export const App: React.FC = () => {
       ...prev,
       {
         type: 'info',
-        text: `\n--- [INÍCIO DA COMPILAÇÃO] ---\nPlaca: ${selectedBoard.name} (${selectedBoard.fqbn})\nArquivos: ${files.map((f) => f.name).join(', ')}\n`
+        text: `\n--- [INÍCIO DA COMPILAÇÃO] ---\nPlaca: ${selectedBoard.name} (${targetFqbn})\nArquivos: ${files.map((f) => f.name).join(', ')}\n`
       }
     ]);
 
     try {
       const mainFile = files.find((f) => f.isMain) || files[0];
       const payload = files.map((f) => ({ name: f.name, content: f.content }));
-      const result = await window.electronAPI.compileSketch(mainFile.content, selectedBoard.fqbn, payload);
+      const result = await window.electronAPI.compileSketch(mainFile.content, targetFqbn, payload);
       if (result.success) {
         setStatusMessage('✔ Compilação concluída com sucesso!');
       } else {
@@ -245,7 +331,10 @@ export const App: React.FC = () => {
       return;
     }
 
+    const targetFqbn = getEffectiveFqbn(selectedBoard.fqbn);
     setIsUploading(true);
+    setUploadProgress(0);
+    setUploadStatusText('Iniciando gravação Flash...');
     setStatusMessage('Gravando sketch na memória Flash...');
     setDrawerTab('console');
     setIsDrawerOpen(true);
@@ -253,7 +342,7 @@ export const App: React.FC = () => {
       ...prev,
       {
         type: 'info',
-        text: `\n--- [INÍCIO DO UPLOAD] ---\nPlaca: ${selectedBoard.name}\nPorta: ${selectedPort}\n`
+        text: `\n--- [INÍCIO DO UPLOAD] ---\nPlaca: ${selectedBoard.name}\nPorta: ${selectedPort}\nFQBN: ${targetFqbn}\n`
       }
     ]);
 
@@ -262,11 +351,13 @@ export const App: React.FC = () => {
       const payload = files.map((f) => ({ name: f.name, content: f.content }));
       const success = await window.electronAPI.uploadSketch(
         mainFile.content,
-        selectedBoard.fqbn,
+        targetFqbn,
         selectedPort,
         payload
       );
       if (success) {
+        setUploadProgress(100);
+        setUploadStatusText('✔ Flash gravada com sucesso! (100%)');
         setStatusMessage('✔ Gravação concluída! Pronto para monitorar.');
         setTimeout(() => {
           setDrawerTab('serial');
@@ -278,7 +369,11 @@ export const App: React.FC = () => {
       setLogs((prev) => [...prev, { type: 'error', text: `❌ Erro no envio: ${err.message}` }]);
       setStatusMessage('❌ Erro no envio.');
     } finally {
-      setIsUploading(false);
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(null);
+        setUploadStatusText('');
+      }, 1500);
     }
   };
 
@@ -289,6 +384,7 @@ export const App: React.FC = () => {
       return;
     }
 
+    const targetFqbn = getEffectiveFqbn(selectedBoard.fqbn);
     setIsExportingBinary(true);
     setStatusMessage('Gerando binário final e exportando para a Área de Trabalho...');
     setDrawerTab('console');
@@ -297,13 +393,13 @@ export const App: React.FC = () => {
       ...prev,
       {
         type: 'info',
-        text: `\n--- [EXPORTAÇÃO DE BINÁRIO] ---\nPlaca: ${selectedBoard.name} (${selectedBoard.fqbn})\n`
+        text: `\n--- [EXPORTAÇÃO DE BINÁRIO] ---\nPlaca: ${selectedBoard.name} (${targetFqbn})\n`
       }
     ]);
 
     try {
       const payload = files.map((f) => ({ name: f.name, content: f.content }));
-      const result = await window.electronAPI.exportBinary(payload, selectedBoard.fqbn);
+      const result = await window.electronAPI.exportBinary(payload, targetFqbn);
       if (result.success) {
         setStatusMessage('✔ Binário exportado com sucesso na pasta Desktop!');
         setLogs((prev) => [
@@ -408,6 +504,22 @@ export const App: React.FC = () => {
 
   const activeFile = files.find((f) => f.id === activeFileId) || files[0];
 
+  const isSelectedBoardEsp32 = selectedBoard && (
+    (selectedBoard.family || '').toUpperCase().includes('ESP32') ||
+    (selectedBoard.platform || '').toLowerCase() === 'esp32' ||
+    (selectedBoard.fqbn || '').toLowerCase().includes('esp32')
+  );
+
+  const partitionSchemeLabel = isSelectedBoardEsp32
+    ? partitionScheme === 'huge_app'
+      ? 'Huge App (3MB)'
+      : partitionScheme === 'min_spiffs'
+      ? 'Min SPIFFS (1.9MB)'
+      : partitionScheme === 'no_ota'
+      ? 'Sem OTA (2MB)'
+      : 'Padrão (1.3MB)'
+    : undefined;
+
   return (
     <div className="flex flex-col h-screen w-screen bg-[#0F0F13] overflow-hidden font-sans">
       {/* Barra de Ferramentas Superior */}
@@ -440,6 +552,8 @@ export const App: React.FC = () => {
         onOpenFile={handleOpenFile}
         onSaveFile={handleSaveFile}
         fileName={activeFile?.name || 'sketch.ino'}
+        partitionScheme={partitionScheme}
+        onPartitionSchemeChange={handlePartitionSchemeChange}
       />
 
 
@@ -481,6 +595,9 @@ export const App: React.FC = () => {
         flashUsage={flashUsage}
         ramUsage={ramUsage}
         statusMessage={statusMessage}
+        uploadProgress={uploadProgress}
+        uploadStatusText={uploadStatusText}
+        partitionSchemeLabel={partitionSchemeLabel}
       />
 
       {/* Modais */}

@@ -16,9 +16,46 @@ import {
   Wrench,
   Code2,
   Search,
-  X
+  X,
+  Layers
 } from 'lucide-react';
 import appLogo from '../assets/logo.png';
+
+export interface PartitionSchemeInfo {
+  id: string;
+  labelShort: string;
+  labelFull: string;
+  desc: string;
+  recommended?: boolean;
+}
+
+export const ESP32_PARTITIONS: PartitionSchemeInfo[] = [
+  {
+    id: 'huge_app',
+    labelShort: 'Huge App (3MB)',
+    labelFull: 'Huge App (3.14MB Sem OTA)',
+    desc: '3.14MB livres para o sketch. Recomendado para BLE, WiFi e projetos complexos.',
+    recommended: true
+  },
+  {
+    id: 'default',
+    labelShort: 'Padrão (1.3MB)',
+    labelFull: 'Padrão (1.31MB Com OTA)',
+    desc: '1.31MB para o sketch com suporte a atualizações remotas OTA.'
+  },
+  {
+    id: 'min_spiffs',
+    labelShort: 'Min SPIFFS (1.9MB)',
+    labelFull: 'Mínimo SPIFFS (1.9MB Com OTA)',
+    desc: '1.9MB para sketch com OTA e SPIFFS reduzido.'
+  },
+  {
+    id: 'no_ota',
+    labelShort: 'Sem OTA (2MB)',
+    labelFull: 'Sem OTA (2.0MB App / 2MB SPIFFS)',
+    desc: '2MB para o sketch e 2MB para sistema de arquivos SPIFFS/LittleFS.'
+  }
+];
 
 interface TopBarProps {
   onCompile: () => void;
@@ -46,6 +83,8 @@ interface TopBarProps {
   onOpenFile: () => void;
   onSaveFile: () => void;
   fileName: string;
+  partitionScheme?: string;
+  onPartitionSchemeChange?: (scheme: string) => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
@@ -73,18 +112,28 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenCoreModal,
   onOpenFile,
   onSaveFile,
-  fileName
+  fileName,
+  partitionScheme = 'huge_app',
+  onPartitionSchemeChange
 }) => {
   const [boardDropdownOpen, setBoardDropdownOpen] = useState(false);
   const [portDropdownOpen, setPortDropdownOpen] = useState(false);
   const [chipMenuOpen, setChipMenuOpen] = useState(false);
+  const [partitionDropdownOpen, setPartitionDropdownOpen] = useState(false);
   const [boardFilter, setBoardFilter] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'Todas' | 'ESP32' | 'Arduino' | 'Outros'>('Todas');
 
   const boardDropdownRef = useRef<HTMLDivElement>(null);
   const portDropdownRef = useRef<HTMLDivElement>(null);
   const chipMenuRef = useRef<HTMLDivElement>(null);
+  const partitionDropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const isEsp32 = selectedBoard && (
+    (selectedBoard.family || '').toUpperCase().includes('ESP32') ||
+    (selectedBoard.platform || '').toLowerCase() === 'esp32' ||
+    (selectedBoard.fqbn || '').toLowerCase().includes('esp32')
+  );
 
   // Fechar dropdowns ao clicar fora
   useEffect(() => {
@@ -97,6 +146,9 @@ export const TopBar: React.FC<TopBarProps> = ({
       }
       if (chipMenuRef.current && !chipMenuRef.current.contains(event.target as Node)) {
         setChipMenuOpen(false);
+      }
+      if (partitionDropdownRef.current && !partitionDropdownRef.current.contains(event.target as Node)) {
+        setPartitionDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -240,7 +292,12 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
 
             <button
-              onClick={() => setChipMenuOpen(!chipMenuOpen)}
+              onClick={() => {
+                setChipMenuOpen(!chipMenuOpen);
+                setBoardDropdownOpen(false);
+                setPortDropdownOpen(false);
+                setPartitionDropdownOpen(false);
+              }}
               disabled={isCompiling || isUploading || isExportingBinary || isReadingFirmware || !selectedPort}
               className="h-8 px-1.5 bg-cyan-700 hover:bg-cyan-600 text-white border-l border-cyan-500/40 transition flex items-center justify-center shrink-0"
               title="Opções de Leitura e Exportação do Chip"
@@ -307,6 +364,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               setBoardDropdownOpen(!boardDropdownOpen);
               setPortDropdownOpen(false);
               setChipMenuOpen(false);
+              setPartitionDropdownOpen(false);
             }}
             className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap shadow-sm"
           >
@@ -423,6 +481,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               setPortDropdownOpen(!portDropdownOpen);
               setBoardDropdownOpen(false);
               setChipMenuOpen(false);
+              setPartitionDropdownOpen(false);
             }}
             className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-[#2A2A3A] hover:border-[#3D3D52] px-2.5 rounded-lg text-gray-200 transition-all shrink-0 whitespace-nowrap shadow-sm"
           >
@@ -477,6 +536,72 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           )}
         </div>
+
+        {/* Seletor de Esquema de Partição Flash (Exclusivo ESP32) */}
+        {isEsp32 && (
+          <div ref={partitionDropdownRef} className="relative shrink-0">
+            <button
+              onClick={() => {
+                setPartitionDropdownOpen(!partitionDropdownOpen);
+                setBoardDropdownOpen(false);
+                setPortDropdownOpen(false);
+                setChipMenuOpen(false);
+              }}
+              title="Configuração do Esquema de Partição da Memória Flash (ESP32)"
+              className="flex items-center gap-1.5 h-8 bg-[#181822] hover:bg-[#222230] border border-amber-500/30 hover:border-amber-500/60 px-2.5 rounded-lg text-amber-200 transition-all shrink-0 whitespace-nowrap shadow-sm text-xs font-medium"
+            >
+              <Layers className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="font-semibold text-amber-300">
+                {ESP32_PARTITIONS.find(p => p.id === partitionScheme)?.labelShort || 'Huge App (3MB)'}
+              </span>
+              <ChevronDown className={`w-3 h-3 text-amber-400/80 opacity-75 shrink-0 transition-transform ${partitionDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {partitionDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1.5 w-76 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2 backdrop-blur-md animate-in fade-in duration-100">
+                <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#282838] px-1">
+                  <span className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">Esquema de Partição Flash</span>
+                  <span className="text-[10px] text-gray-500 font-mono">ESP32</span>
+                </div>
+
+                <div className="space-y-1">
+                  {ESP32_PARTITIONS.map((part) => {
+                    const isSelected = (partitionScheme || 'huge_app') === part.id;
+                    return (
+                      <button
+                        key={part.id}
+                        onClick={() => {
+                          onPartitionSchemeChange?.(part.id);
+                          setPartitionDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex flex-col transition-colors ${
+                          isSelected
+                            ? 'bg-amber-500/20 border border-amber-500/50 text-amber-200 font-semibold'
+                            : 'hover:bg-[#222230] text-gray-300 border border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold flex items-center gap-1.5">
+                            {part.labelFull}
+                            {part.recommended && (
+                              <span className="text-[9px] bg-amber-500/30 text-amber-300 px-1 py-0.2 rounded font-mono font-normal">
+                                Recomendado
+                              </span>
+                            )}
+                          </span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                        </div>
+                        <span className="text-[10px] text-gray-400 mt-0.5 leading-tight">
+                          {part.desc}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 2. GRUPO CENTRAL: IDENTIFICAÇÃO DO PROJETO */}
