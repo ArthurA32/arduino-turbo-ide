@@ -285,7 +285,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               onClick={onReadChipFirmware}
               disabled={isCompiling || isUploading || isExportingBinary || isReadingFirmware || !selectedPort}
               title={!selectedPort ? 'Conecte a uma porta COM para ler o chip' : 'Ler e Descompilar Código em Silício do Chip'}
-              className={`flex items-center gap-1.5 h-8 px-2 sm:px-3 font-semibold text-white transition-all whitespace-nowrap shrink-0 ${
+              className={`flex items-center gap-1.5 h-8 px-2.5 font-semibold text-white transition-all whitespace-nowrap shrink-0 ${
                 isReadingFirmware
                   ? 'bg-cyan-800 opacity-90 cursor-wait'
                   : !selectedPort
@@ -294,14 +294,8 @@ export const TopBar: React.FC<TopBarProps> = ({
               }`}
             >
               <Cpu className={`w-3.5 h-3.5 shrink-0 ${isReadingFirmware ? 'animate-spin' : ''}`} />
-              <span className="whitespace-nowrap hidden 2xl:inline leading-normal">
-                {isReadingFirmware ? 'Lendo Chip...' : 'Ler / Descompilar Chip'}
-              </span>
-              <span className="whitespace-nowrap 2xl:hidden hidden md:inline leading-normal">
-                {isReadingFirmware ? 'Lendo Chip...' : 'Ler Chip'}
-              </span>
-              <span className="whitespace-nowrap md:hidden leading-normal">
-                {isReadingFirmware ? '...' : 'Ler'}
+              <span className="whitespace-nowrap hidden sm:inline leading-normal">
+                {isReadingFirmware ? 'Lendo...' : 'Ler Chip'}
               </span>
             </button>
 
@@ -353,21 +347,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           )}
         </div>
-
-        {/* Botão Exportar Binário Rápido */}
-        <button
-          onClick={onExportBinary}
-          disabled={isCompiling || isUploading || isExportingBinary || !selectedBoard}
-          title="Exportar Binário Compilado (.bin / .hex) para a Área de Trabalho"
-          className={`hidden xl:flex items-center gap-1.5 h-8 px-2.5 rounded-lg border transition-all text-xs font-medium shrink-0 whitespace-nowrap ${
-            isExportingBinary
-              ? 'bg-[#261E38] border-purple-600 text-purple-200 cursor-wait'
-              : 'bg-[#181822] hover:bg-[#222232] border-[#2A2A3A] hover:border-purple-600/50 text-gray-300 hover:text-white active:scale-95'
-          }`}
-        >
-          <Binary className={`w-3.5 h-3.5 text-purple-400 shrink-0 ${isExportingBinary ? 'animate-spin' : ''}`} />
-          <span className="hidden 2xl:inline whitespace-nowrap">{isExportingBinary ? 'Exportando...' : 'Exportar Binário'}</span>
-        </button>
 
         <div className="h-5 w-[1px] bg-[#2A2A3A] mx-0.5 shrink-0" />
 
@@ -648,40 +627,36 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button
           onClick={onOpenLibraryModal}
           title="Gerenciador de Bibliotecas do Arduino (Nuvem e Instaladas)"
-          className="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-teal-500/50 text-gray-300 hover:text-white text-xs font-medium transition-all active:scale-95 shrink-0"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-teal-500/50 text-gray-300 hover:text-white transition-all active:scale-95 shrink-0"
         >
           <BookOpen className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-          <span className="hidden 2xl:inline">Bibliotecas</span>
         </button>
 
         {/* Depuração GDB & JTAG */}
         <button
           onClick={onOpenDebugModal}
           title="Depuração de Hardware (GDB / JTAG / OpenOCD)"
-          className="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-amber-500/50 text-gray-300 hover:text-white text-xs font-medium transition-all active:scale-95 shrink-0"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-amber-500/50 text-gray-300 hover:text-white transition-all active:scale-95 shrink-0"
         >
           <Wrench className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span className="hidden 2xl:inline">Depurar</span>
         </button>
 
         {/* Gerenciar Cores / Drivers */}
         <button
           onClick={onOpenCoreModal}
           title="Gerenciador de Cores e Drivers de Placas (ESP32, AVR, SAMD)"
-          className="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-sky-500/50 text-gray-300 hover:text-white text-xs font-medium transition-all active:scale-95 shrink-0"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#181822] hover:bg-[#222232] border border-[#2A2A3A] hover:border-sky-500/50 text-gray-300 hover:text-white transition-all active:scale-95 shrink-0"
         >
           <DownloadCloud className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-          <span className="hidden 2xl:inline">Cores</span>
         </button>
 
         {/* Relatório de Erros & Diagnóstico */}
         <button
           onClick={onOpenReportModal}
           title="Exportar Relatório de Erros e Diagnóstico de Sistema"
-          className="flex items-center gap-1.5 h-8 px-2 sm:px-2.5 rounded-lg bg-[#181822] hover:bg-[#28181E] border border-[#2A2A3A] hover:border-rose-500/50 text-gray-300 hover:text-rose-200 text-xs font-medium transition-all active:scale-95 shrink-0"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#181822] hover:bg-[#28181E] border border-[#2A2A3A] hover:border-rose-500/50 text-gray-300 hover:text-rose-200 transition-all active:scale-95 shrink-0"
         >
           <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-          <span className="hidden 2xl:inline">Diagnóstico</span>
         </button>
 
         <div className="h-5 w-[1px] bg-[#2A2A3A] mx-0.5 shrink-0" />
@@ -697,7 +672,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           }`}
         >
           <Terminal className={`w-3.5 h-3.5 ${isSerialOpen ? 'text-white' : 'text-[#E47128]'}`} />
-          <span className="hidden sm:inline">Monitor Serial</span>
+          <span className="whitespace-nowrap font-medium">Monitor Serial</span>
         </button>
 
       </div>
