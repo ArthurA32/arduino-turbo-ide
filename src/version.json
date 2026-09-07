@@ -1,26 +1,26 @@
 {
   "arm64": {
-    "version": "0.2.1",
-    "build": 21,
+    "version": "0.2.2",
+    "build": 22,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Seletores TopBar: Correção no corte de overflow dos menus suspensos de Placas, Portas COM e Esquema de Partição Flash (Huge App).",
-      "Progresso de Atualização: Janela nativa com barra de progresso em tempo real durante a instalação da nova versão.",
-      "Monaco Editor: Web Workers dedicados eliminando travamentos de digitação em segundo plano.",
-      "Changelog Dinâmico: Notas de versão geradas dinamicamente a cada release."
+      "Modal de Atualização: Correção definitiva da chamada de hooks do React 19 (eliminado Minified React error #310).",
+      "Quality Gate & CI: Pipeline automatizado de testes em 3 camadas com bloqueio estrito de falhas.",
+      "Seletores TopBar: Correção no corte de overflow dos menus de Placas, Portas COM e Esquema de Partição Flash (Huge App).",
+      "Progresso Nativo: Janela com barra de progresso em tempo real durante a instalação /UPDATE."
     ]
   },
   "x64": {
-    "version": "0.1.8",
-    "build": 18,
+    "version": "0.1.9",
+    "build": 19,
     "target": "Windows x64",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Seletores TopBar: Correção no corte de overflow dos menus suspensos de Placas, Portas COM e Esquema de Partição Flash (Huge App).",
-      "Progresso de Atualização: Janela nativa com barra de progresso em tempo real durante a instalação da nova versão.",
-      "Monaco Editor: Web Workers dedicados eliminando travamentos de digitação em segundo plano.",
-      "Changelog Dinâmico: Notas de versão geradas dinamicamente a cada release."
+      "Modal de Atualização: Correção definitiva da chamada de hooks do React 19 (eliminado Minified React error #310).",
+      "Quality Gate & CI: Pipeline automatizado de testes em 3 camadas com bloqueio estrito de falhas.",
+      "Seletores TopBar: Correção no corte de overflow dos menus de Placas, Portas COM e Esquema de Partição Flash (Huge App).",
+      "Progresso Nativo: Janela com barra de progresso em tempo real durante a instalação /UPDATE."
     ]
   }
 }

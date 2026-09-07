@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.2349064">
-    <testsuite name="tests/frontend/serialPlotterSafety.test.tsx" timestamp="2026-09-07T20:18:52.214Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0427339">
-        <testcase classname="tests/frontend/serialPlotterSafety.test.tsx" name="Segurança de Portas Nulas/Indefinidas em Componentes Seriais &gt; SerialPlotter deve renderizar sem exceção mesmo se ports for indefinido ou vazio" time="0.0292669">
+<testsuites name="vitest tests" tests="10" failures="0" errors="0" time="0.266343">
+    <testsuite name="tests/frontend/serialPlotterSafety.test.tsx" timestamp="2026-09-07T21:14:37.802Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0457722">
+        <testcase classname="tests/frontend/serialPlotterSafety.test.tsx" name="Segurança de Portas Nulas/Indefinidas em Componentes Seriais &gt; SerialPlotter deve renderizar sem exceção mesmo se ports for indefinido ou vazio" time="0.0318417">
         </testcase>
-        <testcase classname="tests/frontend/serialPlotterSafety.test.tsx" name="Segurança de Portas Nulas/Indefinidas em Componentes Seriais &gt; SerialTerminal deve renderizar sem exceção mesmo se ports for nulo" time="0.0112281">
-        </testcase>
-    </testsuite>
-    <testsuite name="tests/frontend/topbarSelectors.test.tsx" timestamp="2026-09-07T20:18:52.218Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.1297853">
-        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve conter as classes overflow-visible e z-40 no header para não cortar menus suspensos" time="0.0398805">
-        </testcase>
-        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o menu de seleção de placas ao clicar no botão de placa" time="0.0388633">
-        </testcase>
-        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o seletor de portas COM ao clicar" time="0.0259838">
-        </testcase>
-        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o seletor de partição Huge App quando a placa for ESP32" time="0.0225666">
+        <testcase classname="tests/frontend/serialPlotterSafety.test.tsx" name="Segurança de Portas Nulas/Indefinidas em Componentes Seriais &gt; SerialTerminal deve renderizar sem exceção mesmo se ports for nulo" time="0.0115178">
         </testcase>
     </testsuite>
-    <testsuite name="tests/frontend/updateModalChangelog.test.tsx" timestamp="2026-09-07T20:18:52.219Z" hostname="WIN-BFB7PNSPVLR" tests="3" failures="0" errors="0" skipped="0" time="0.0623872">
-        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve renderizar as notas de versão dinâmicas fornecidas pelo servidor" time="0.0468471">
+    <testsuite name="tests/frontend/topbarSelectors.test.tsx" timestamp="2026-09-07T21:14:37.806Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.1405181">
+        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve conter as classes overflow-visible e z-40 no header para não cortar menus suspensos" time="0.0423101">
         </testcase>
-        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve exibir a data de lançamento da atualização" time="0.0109498">
+        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o menu de seleção de placas ao clicar no botão de placa" time="0.0451638">
         </testcase>
-        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; não deve renderizar quando isOpen for false" time="0.0021974">
+        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o seletor de portas COM ao clicar" time="0.0284507">
+        </testcase>
+        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o seletor de partição Huge App quando a placa for ESP32" time="0.02217">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/frontend/updateModalChangelog.test.tsx" timestamp="2026-09-07T21:14:37.807Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.0800527">
+        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve renderizar as notas de versão dinâmicas fornecidas pelo servidor" time="0.0474006">
+        </testcase>
+        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve exibir a data de lançamento da atualização" time="0.0094385">
+        </testcase>
+        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; não deve renderizar quando isOpen for false" time="0.00256">
+        </testcase>
+        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve alternar de fechado para aberto e vice-versa sem erro de hooks (React error #310)" time="0.0181709">
         </testcase>
     </testsuite>
 </testsuites>

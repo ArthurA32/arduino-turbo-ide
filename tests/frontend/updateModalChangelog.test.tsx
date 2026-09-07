@@ -67,4 +67,34 @@ describe('UpdateModal - Changelog Dinâmico e Formatação', () => {
 
     expect(container.firstChild).toBeNull();
   });
+
+  it('deve alternar de fechado para aberto e vice-versa sem erro de hooks (React error #310)', () => {
+    const { rerender } = render(
+      <UpdateModal
+        isOpen={false}
+        onClose={() => {}}
+        updateInfo={mockUpdateInfo}
+      />
+    );
+
+    // Abre o modal
+    rerender(
+      <UpdateModal
+        isOpen={true}
+        onClose={() => {}}
+        updateInfo={mockUpdateInfo}
+      />
+    );
+    expect(screen.getByText(/Atualização Silenciosa Disponível/i)).toBeDefined();
+
+    // Fecha o modal
+    rerender(
+      <UpdateModal
+        isOpen={false}
+        onClose={() => {}}
+        updateInfo={mockUpdateInfo}
+      />
+    );
+    expect(screen.queryByText(/Atualização Silenciosa Disponível/i)).toBeNull();
+  });
 });

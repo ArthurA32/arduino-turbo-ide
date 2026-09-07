@@ -740,11 +740,13 @@ export const App: React.FC = () => {
         fqbn={selectedBoard?.fqbn}
       />
 
-      <UpdateModal
-        isOpen={isUpdateModalOpen}
-        onClose={() => setIsUpdateModalOpen(false)}
-        updateInfo={updateInfo}
-      />
+      {isUpdateModalOpen && (
+        <UpdateModal
+          isOpen={isUpdateModalOpen}
+          onClose={() => setIsUpdateModalOpen(false)}
+          updateInfo={updateInfo}
+        />
+      )}
 
     </div>
   );
