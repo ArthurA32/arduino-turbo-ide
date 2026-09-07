@@ -50,11 +50,13 @@ Var Hwnd_InfoBox
 Var SelectedArch
 Var DetectedArch
 Var AutoRestart
+Var IsUpdating
 
 ; Configuracoes da interface
 !define MUI_ABORTWARNING
 
 ; 1. Pagina de Boas-Vindas
+!define MUI_PAGE_CUSTOMFUNCTION_PRE WelcomePre
 !define MUI_WELCOMEPAGE_TITLE "Bem-vindo ao Instalador Universal do ${PRODUCT_NAME}"
 !define MUI_WELCOMEPAGE_TEXT "Este instalador universal unifica os pacotes nativos para Windows ARM64 e Windows x64 em um unico executavel.\r\n\r\nNa proxima etapa, voce podera selecionar ou confirmar a versao otimizada para o seu computador.\r\n\r\nClique em Avancar para continuar."
 !insertmacro MUI_PAGE_WELCOME
@@ -63,12 +65,15 @@ Var AutoRestart
 Page custom ArchSelectionPage ArchSelectionPageLeave
 
 ; 3. Pagina de Diretorio de Instalacao
+!define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPre
 !insertmacro MUI_PAGE_DIRECTORY
 
 ; 4. Pagina de Instalacao de Arquivos
+!define MUI_PAGE_CUSTOMFUNCTION_PRE InstFilesPre
 !insertmacro MUI_PAGE_INSTFILES
 
 ; 5. Pagina de Conclusao
+!define MUI_PAGE_CUSTOMFUNCTION_PRE FinishPre
 !define MUI_FINISHPAGE_RUN "$INSTDIR\Arduino Turbo IDE.exe"
 !define MUI_FINISHPAGE_RUN_TEXT "Iniciar o ${PRODUCT_NAME} agora"
 !insertmacro MUI_PAGE_FINISH
@@ -121,9 +126,46 @@ Function .onInit
   ${IfNot} ${Errors}
     StrCpy $AutoRestart "1"
   ${EndIf}
+
+  ; Checar se foi passado parametro /UPDATE na linha de comando
+  ${GetParameters} $R0
+  ClearErrors
+  ${GetOptions} $R0 "/UPDATE" $R1
+  ${IfNot} ${Errors}
+    StrCpy $IsUpdating "1"
+    StrCpy $AutoRestart "1"
+  ${EndIf}
+FunctionEnd
+
+Function WelcomePre
+  ${If} $IsUpdating == "1"
+    Abort
+  ${EndIf}
+FunctionEnd
+
+Function DirectoryPre
+  ${If} $IsUpdating == "1"
+    Abort
+  ${EndIf}
+FunctionEnd
+
+Function InstFilesPre
+  ${If} $IsUpdating == "1"
+    SetAutoClose true
+  ${EndIf}
+FunctionEnd
+
+Function FinishPre
+  ${If} $IsUpdating == "1"
+    Abort
+  ${EndIf}
 FunctionEnd
 
 Function ArchSelectionPage
+  ${If} $IsUpdating == "1"
+    Abort
+  ${EndIf}
+
   !insertmacro MUI_HEADER_TEXT "Escolha da Arquitetura do Sistema" "Selecione a versao nativa do Arduino Turbo IDE que deseja instalar."
 
   nsDialogs::Create 1018

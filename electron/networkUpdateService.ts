@@ -177,18 +177,18 @@ export class NetworkUpdateService {
 
       diagnostics.logSystem(`[AutoUpdater] Cópia concluída com sucesso (${totalSize} bytes). Disparando instalador silencioso...`);
 
-      // Disparar instalador em processo desvinculado (detached) com pré-seleção da arquitetura atual e modo silencioso (/S)
+      // Disparar instalador em modo de atualização com barra de progresso visual (/UPDATE) e reinício automático
       const archArg = `/ARCH=${(currentInfo?.arch || 'x64').toUpperCase()}`;
-      const child = spawn(destInstaller, ['/S', archArg, '/AUTO_RESTART'], {
+      const child = spawn(destInstaller, ['/UPDATE', archArg, '/AUTO_RESTART'], {
         detached: true,
         stdio: 'ignore'
       });
       child.unref();
 
-      // Fechar a aplicação em 800ms para liberar os arquivos e permitir a atualização silenciosa imediata
+      // Fechar a aplicação em 1200ms para que a janela de progresso do instalador já apareça na tela
       setTimeout(() => {
         if (app) app.quit();
-      }, 800);
+      }, 1200);
 
       return { success: true };
     } catch (err: any) {

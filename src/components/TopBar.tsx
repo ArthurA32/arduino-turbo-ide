@@ -226,7 +226,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   }, [boards, boardFilter, selectedCategory]);
 
   return (
-    <header className="h-13 bg-[#131318] border-b border-[#242430] flex items-center justify-between px-2.5 text-xs z-30 relative select-none shadow-md overflow-hidden flex-nowrap min-w-0">
+    <header className="h-13 bg-[#131318] border-b border-[#242430] flex items-center justify-between px-2.5 text-xs z-40 relative select-none shadow-md overflow-visible flex-nowrap min-w-0">
       
       {/* 1. GRUPO ESQUERDO: LOGO, COMPILAÇÃO, GRAVAÇÃO E SELEÇÃO */}
       <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 flex-nowrap min-w-0">

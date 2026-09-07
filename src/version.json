@@ -1,28 +1,26 @@
 {
   "arm64": {
-    "version": "0.2.0",
-    "build": 20,
+    "version": "0.2.1",
+    "build": 21,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Monaco Editor: Execução de análise sintática e intellisense em Web Workers dedicados, eliminando travamentos de digitação.",
-      "Instalador NSIS: Correção no parâmetro /AUTO_RESTART garantindo reinício automático e silencioso 100% confiável.",
-      "Auto-Updater de Rede: Comparação estrita de versão semver para prevenir notificações incorretas de atualização.",
-      "Portas Seriais: Proteção defensiva contra falhas de lista indefinida no Terminal Serial e Plotter Gráfico.",
-      "Changelog Dinâmico: Exibição detalhada de todas as alterações e correções diretamente na janela de atualização."
+      "Seletores TopBar: Correção no corte de overflow dos menus suspensos de Placas, Portas COM e Esquema de Partição Flash (Huge App).",
+      "Progresso de Atualização: Janela nativa com barra de progresso em tempo real durante a instalação da nova versão.",
+      "Monaco Editor: Web Workers dedicados eliminando travamentos de digitação em segundo plano.",
+      "Changelog Dinâmico: Notas de versão geradas dinamicamente a cada release."
     ]
   },
   "x64": {
-    "version": "0.1.7",
-    "build": 17,
+    "version": "0.1.8",
+    "build": 18,
     "target": "Windows x64",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Monaco Editor: Execução de análise sintática e intellisense em Web Workers dedicados, eliminando travamentos de digitação.",
-      "Instalador NSIS: Correção no parâmetro /AUTO_RESTART garantindo reinício automático e silencioso 100% confiável.",
-      "Auto-Updater de Rede: Comparação estrita de versão semver para prevenir notificações incorretas de atualização.",
-      "Portas Seriais: Proteção defensiva contra falhas de lista indefinida no Terminal Serial e Plotter Gráfico.",
-      "Changelog Dinâmico: Exibição detalhada de todas as alterações e correções diretamente na janela de atualização."
+      "Seletores TopBar: Correção no corte de overflow dos menus suspensos de Placas, Portas COM e Esquema de Partição Flash (Huge App).",
+      "Progresso de Atualização: Janela nativa com barra de progresso em tempo real durante a instalação da nova versão.",
+      "Monaco Editor: Web Workers dedicados eliminando travamentos de digitação em segundo plano.",
+      "Changelog Dinâmico: Notas de versão geradas dinamicamente a cada release."
     ]
   }
 }
