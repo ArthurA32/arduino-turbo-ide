@@ -165,8 +165,9 @@ export class NetworkUpdateService {
 
       diagnostics.logSystem(`[AutoUpdater] Cópia concluída com sucesso (${totalSize} bytes). Disparando instalador...`);
 
-      // Disparar instalador em processo desvinculado (detached)
-      const child = spawn(destInstaller, [], {
+      // Disparar instalador em processo desvinculado (detached) com pré-seleção da arquitetura atual
+      const archArg = `/ARCH=${(currentInfo?.arch || 'x64').toUpperCase()}`;
+      const child = spawn(destInstaller, [archArg], {
         detached: true,
         stdio: 'ignore'
       });

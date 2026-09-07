@@ -15,18 +15,6 @@ try {
   execSync('taskkill /F /IM "Arduino Turbo IDE.exe" /T', { stdio: 'ignore' });
 } catch {}
 
-const args = process.argv.slice(2);
-let targetArchArg = 'arm64';
-
-for (const arg of args) {
-  if (arg.startsWith('--arch=')) {
-    targetArchArg = arg.split('=')[1].toLowerCase();
-  }
-}
-
-const buildX64 = targetArchArg === 'x64' || targetArchArg === 'all';
-const buildArm64 = targetArchArg === 'arm64' || targetArchArg === 'all';
-
 const versionConfigPath = path.join(projectRoot, 'src', 'version.json');
 let versionConfig = { arm64: { version: '0.1.5', build: 15 }, x64: { version: '0.1.3', build: 13 } };
 if (fs.existsSync(versionConfigPath)) {
@@ -35,12 +23,26 @@ if (fs.existsSync(versionConfigPath)) {
   } catch {}
 }
 
+const arm64Version = versionConfig.arm64?.version || '0.1.5';
+const x64Version = versionConfig.x64?.version || '0.1.3';
+const mainVersion = arm64Version; // Versão de referência do instalador
+
 console.log('==========================================================');
-console.log(`  PIPELINE BUILD ARDUINO TURBO IDE (INSTALLER + ZIP + UPDATES)`);
-console.log(`  Alvos selecionados: ${buildX64 && buildArm64 ? 'x64 + ARM64 (Dual Target)' : buildX64 ? 'Apenas x64' : 'Apenas ARM64'}`);
-if (buildArm64) console.log(`  Versão ARM64: v${versionConfig.arm64?.version || '0.1.5'} (Build #${versionConfig.arm64?.build || 15})`);
-if (buildX64) console.log(`  Versão x64:   v${versionConfig.x64?.version || '0.1.3'} (Build #${versionConfig.x64?.build || 13})`);
+console.log(`  PIPELINE BUILD ARDUINO TURBO IDE (INSTALADOR UNIVERSAL) `);
+console.log(`  Versão ARM64: v${arm64Version} (Build #${versionConfig.arm64?.build || 15})`);
+console.log(`  Versão x64:   v${x64Version} (Build #${versionConfig.x64?.build || 13})`);
 console.log('==========================================================');
+
+// Localizar makensis.exe
+function resolveMakensisExe() {
+  const localCache = path.join(os.homedir(), 'AppData', 'Local', 'electron-builder', 'Cache', 'nsis', 'nsis-3.0.4.1', 'makensis.exe');
+  if (fs.existsSync(localCache)) return localCache;
+
+  const binCache = path.join(os.homedir(), 'AppData', 'Local', 'electron-builder', 'Cache', 'nsis', 'nsis-3.0.4.1', 'Bin', 'makensis.exe');
+  if (fs.existsSync(binCache)) return binCache;
+
+  return 'makensis.exe';
+}
 
 // Localizar ou criar diretório de updates no servidor de rede
 function resolveServerUpdateDir() {
@@ -62,173 +64,156 @@ function resolveServerUpdateDir() {
   return null;
 }
 
-// 1. Compilação do Frontend e Electron com Vite
-console.log('\n[1/4] Compilando assets e TypeScript (Vite)...');
+// 1. Compilar Frontend e Electron com Vite
+console.log('\n[1/5] Compilando assets e TypeScript (Vite)...');
 execSync('npm run build', { cwd: projectRoot, stdio: 'inherit' });
 
-// Função para empacotar, gerar instalador NSIS e sincronizar servidor
-function packageAndExport(arch, label, folderName, zipName) {
-  const archVersion = versionConfig[arch]?.version || '0.1.5';
-  const archBuild = versionConfig[arch]?.build || 15;
-  const archLabel = arch === 'arm64' ? 'ARM64' : 'x64';
+// 2. Empacotar unpacked das duas arquiteturas
+console.log('\n[2/5] Gerando pacotes nativos para x64 e ARM64...');
 
-  console.log(`\n----------------------------------------------------------`);
-  console.log(`[2/4] Gerando instalador NSIS e binário para ${label} (${arch}) v${archVersion}...`);
-  console.log(`----------------------------------------------------------`);
+console.log('   📦 Empacotando Windows x64 (unpacked)...');
+execSync('npx electron-builder --x64 --win --dir', { cwd: projectRoot, stdio: 'inherit' });
 
-  // Sincronizar package.json version antes de empacotar
-  const pkgPath = path.join(projectRoot, 'package.json');
-  try {
-    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-    pkg.version = archVersion;
-    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
-  } catch {}
+console.log('   📦 Empacotando Windows ARM64 (unpacked)...');
+execSync('npx electron-builder --arm64 --win --dir', { cwd: projectRoot, stdio: 'inherit' });
 
-  // Executar electron-builder (produz o unpacked e o instalador NSIS)
-  execSync(`npx electron-builder --${arch} --win`, { cwd: projectRoot, stdio: 'inherit' });
+const arm64Folder = path.join(releaseDir, 'win-arm64-unpacked');
+const x64Folder = path.join(releaseDir, 'win-unpacked');
 
-  // Localizar pasta descompactada
-  const candidateFolders = [
-    path.join(releaseDir, `win-${arch}-unpacked`),
-    path.join(releaseDir, arch === 'x64' ? 'win-unpacked' : `win-${arch}-unpacked`)
-  ];
-  let packagedFolder = candidateFolders.find(f => fs.existsSync(f));
-  if (!packagedFolder) {
-    throw new Error(`Pasta de saída do electron-builder não encontrada: ${candidateFolders.join(', ')}`);
-  }
+if (!fs.existsSync(arm64Folder) || !fs.existsSync(x64Folder)) {
+  throw new Error('Falha ao localizar pastas descompactadas das arquiteturas.');
+}
 
-  // Localizar instalador NSIS gerado pelo electron-builder
-  const candidateInstallers = [
-    path.join(releaseDir, `Arduino_Turbo_IDE_Setup_${arch}.exe`),
-    path.join(releaseDir, `Arduino Turbo IDE Setup ${archVersion}.exe`),
-    path.join(releaseDir, `Arduino_Turbo_IDE_Setup_${archVersion}.exe`)
-  ];
-  let sourceInstaller = candidateInstallers.find(f => fs.existsSync(f));
+// 3. Gerar arquivos compactados (.ZIP) no Desktop
+console.log('\n[3/5] Gerando arquivos compactados (.ZIP) na Área de Trabalho...');
 
-  if (!sourceInstaller) {
-    // Busca qualquer .exe de instalador na pasta release
-    const allExes = fs.readdirSync(releaseDir).filter(f => f.endsWith('.exe') && f.includes('Setup'));
-    if (allExes.length > 0) {
-      sourceInstaller = path.join(releaseDir, allExes[0]);
-    } else {
-      throw new Error(`Instalador NSIS não encontrado em ${releaseDir}`);
-    }
-  }
+const zipArm64 = path.join(desktopDir, 'Arduino_Turbo_IDE_Windows_ARM64.zip');
+const zipX64 = path.join(desktopDir, 'Arduino_Turbo_IDE_Windows_x64.zip');
 
-  console.log(`   ✔ Instalador gerado: ${sourceInstaller}`);
+if (fs.existsSync(zipArm64)) fs.unlinkSync(zipArm64);
+if (fs.existsSync(zipX64)) fs.unlinkSync(zipX64);
 
-  console.log(`\n[3/4] Exportando instalador (.exe) e arquivo .zip para a Área de Trabalho...`);
+try {
+  execSync(`tar -a -c -f "${zipArm64}" -C "${path.dirname(arm64Folder)}" "${path.basename(arm64Folder)}"`);
+} catch {
+  execSync(`powershell -Command "Compress-Archive -Path '${arm64Folder}\\*' -DestinationPath '${zipArm64}' -Force"`);
+}
+console.log(`   ✔ ZIP ARM64 entregue: ${zipArm64}`);
 
-  // 1. Limpar pastas descompactadas soltas na Área de Trabalho (conforme regra estrita do usuário)
-  const looseDesktopFolder = path.join(desktopDir, folderName);
-  if (fs.existsSync(looseDesktopFolder)) {
-    console.log(`   🧹 Removendo pasta descompactada solta da Área de Trabalho: ${folderName}`);
+try {
+  execSync(`tar -a -c -f "${zipX64}" -C "${path.dirname(x64Folder)}" "${path.basename(x64Folder)}"`);
+} catch {
+  execSync(`powershell -Command "Compress-Archive -Path '${x64Folder}\\*' -DestinationPath '${zipX64}' -Force"`);
+}
+console.log(`   ✔ ZIP x64 entregue: ${zipX64}`);
+
+// 4. Compilar o Instalador Universal Unificado via NSIS
+console.log('\n[4/5] Compilando Instalador Universal Unificado (ARM64 + x64)...');
+const makensisExe = resolveMakensisExe();
+const nsiScript = path.join(projectRoot, 'scripts', 'installer-universal.nsi');
+const universalInstallerOutput = path.join(releaseDir, 'Arduino_Turbo_IDE_Setup.exe');
+
+const nsisCmd = `"${makensisExe}" "/DAPP_VERSION=${mainVersion}" "/DPROJECT_ROOT=${projectRoot}" "/DOUTPUT_FILE=${universalInstallerOutput}" "${nsiScript}"`;
+execSync(nsisCmd, { cwd: projectRoot, stdio: 'inherit' });
+
+if (!fs.existsSync(universalInstallerOutput)) {
+  throw new Error('Falha ao gerar o Instalador Universal.');
+}
+
+console.log(`   ✔ Instalador Universal gerado com sucesso: ${universalInstallerOutput}`);
+
+// 5. Entregar na Área de Trabalho e Sincronizar com o Servidor de Rede
+console.log('\n[5/5] Publicando instalador único na Área de Trabalho e no Servidor...');
+
+// Desktop:
+const desktopInstaller = path.join(desktopDir, 'Arduino_Turbo_IDE_Setup.exe');
+fs.copyFileSync(universalInstallerOutput, desktopInstaller);
+console.log(`   ✔ Instalador Universal entregue no Desktop: ${desktopInstaller}`);
+
+// Limpar instaladores separados antigos do Desktop
+const oldDesktopFiles = [
+  path.join(desktopDir, 'Arduino_Turbo_IDE_Setup_ARM64.exe'),
+  path.join(desktopDir, 'Arduino_Turbo_IDE_Setup_x64.exe'),
+  path.join(desktopDir, 'Arduino_Turbo_IDE_Windows_ARM64'),
+  path.join(desktopDir, 'Arduino_Turbo_IDE_Windows_x64')
+];
+for (const f of oldDesktopFiles) {
+  if (fs.existsSync(f)) {
     try {
-      fs.rmSync(looseDesktopFolder, { recursive: true, force: true });
+      if (fs.statSync(f).isDirectory()) {
+        fs.rmSync(f, { recursive: true, force: true });
+      } else {
+        fs.unlinkSync(f);
+      }
+      console.log(`   🧹 Removido arquivo avulso antigo do Desktop: ${path.basename(f)}`);
     } catch {}
   }
+}
 
-  // 2. Copiar instalador para a Área de Trabalho
-  const desktopInstallerName = `Arduino_Turbo_IDE_Setup_${archLabel}.exe`;
-  const desktopInstallerPath = path.join(desktopDir, desktopInstallerName);
-  fs.copyFileSync(sourceInstaller, desktopInstallerPath);
-  console.log(`   ✔ Instalador (.exe) entregue no Desktop: ${desktopInstallerPath}`);
+// Servidor de Rede (Z:\Updates Turbo IDE)
+const serverDir = resolveServerUpdateDir();
+if (serverDir) {
+  console.log(`   🌐 Conectado ao servidor de atualizações: ${serverDir}`);
 
-  // 3. Gerar arquivo compactado (.zip) da aplicação na Área de Trabalho
-  const targetZip = path.join(desktopDir, zipName);
-  if (fs.existsSync(targetZip)) {
-    fs.unlinkSync(targetZip);
-  }
-  console.log(`   📦 Gerando arquivo compactado (.ZIP): ${targetZip}`);
+  // Limpar instaladores antigos do servidor
   try {
-    execSync(`tar -a -c -f "${targetZip}" -C "${path.dirname(packagedFolder)}" "${path.basename(packagedFolder)}"`);
-  } catch {
-    execSync(`powershell -Command "Compress-Archive -Path '${packagedFolder}\\*' -DestinationPath '${targetZip}' -Force"`);
-  }
-  console.log(`   ✔ Arquivo ZIP entregue no Desktop: ${targetZip}`);
-
-  // 4. Sincronizar servidor de atualizações na rede local (Z:\Updates Turbo IDE)
-  console.log(`\n[4/4] Sincronizando servidor de rede para atualizações automáticas...`);
-  const serverDir = resolveServerUpdateDir();
-
-  if (serverDir) {
-    console.log(`   🌐 Conectado ao servidor de atualizações: ${serverDir}`);
-
-    // Limpar instaladores antigos desta arquitetura no servidor
-    try {
-      const serverFiles = fs.readdirSync(serverDir);
-      for (const file of serverFiles) {
-        if (file.toLowerCase().endsWith('.exe') && file.toLowerCase().includes(archLabel.toLowerCase())) {
-          const oldFilePath = path.join(serverDir, file);
-          console.log(`   🗑 Removendo versão antiga do servidor: ${file}`);
-          fs.unlinkSync(oldFilePath);
-        }
+    const serverFiles = fs.readdirSync(serverDir);
+    for (const file of serverFiles) {
+      if (file.toLowerCase().endsWith('.exe')) {
+        const oldFilePath = path.join(serverDir, file);
+        fs.unlinkSync(oldFilePath);
+        console.log(`   🗑 Removendo instalador antigo do servidor: ${file}`);
       }
-    } catch (err) {
-      console.warn('   Aviso ao limpar versões antigas no servidor:', err.message);
     }
+  } catch (err) {
+    console.warn('   Aviso ao limpar servidor:', err.message);
+  }
 
-    // Copiar o novo instalador para a pasta de updates do servidor
-    const serverInstallerPath = path.join(serverDir, desktopInstallerName);
-    fs.copyFileSync(sourceInstaller, serverInstallerPath);
-    console.log(`   ✔ Novo instalador copiado para o servidor: ${serverInstallerPath}`);
+  // Copiar novo instalador universal para o servidor
+  const serverInstallerPath = path.join(serverDir, 'Arduino_Turbo_IDE_Setup.exe');
+  fs.copyFileSync(universalInstallerOutput, serverInstallerPath);
+  console.log(`   ✔ Novo instalador universal copiado para o servidor: ${serverInstallerPath}`);
 
-    // Atualizar manifesto updates.json no servidor
-    const manifestPath = path.join(serverDir, 'updates.json');
-    let manifest = {};
-    if (fs.existsSync(manifestPath)) {
-      try {
-        manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-      } catch {}
-    }
+  // Atualizar manifesto updates.json
+  const manifestPath = path.join(serverDir, 'updates.json');
+  const installerSize = fs.statSync(serverInstallerPath).size;
 
-    manifest[arch] = {
-      version: archVersion,
-      build: archBuild,
-      installer: desktopInstallerName,
+  const manifest = {
+    universal: {
+      version: mainVersion,
+      build: versionConfig.arm64?.build || 15,
+      installer: 'Arduino_Turbo_IDE_Setup.exe',
       releaseDate: new Date().toISOString().split('T')[0],
-      changelog: `Build v${archVersion} (#${archBuild}) com instalador nativo automático e suporte a updates via rede local.`,
-      fileSize: fs.statSync(serverInstallerPath).size
-    };
-    manifest.lastUpdated = new Date().toISOString();
+      changelog: `Instalador Universal Unificado v${mainVersion} com suporte e seleção nativa para Windows ARM64 e Windows x64.`,
+      fileSize: installerSize
+    },
+    arm64: {
+      version: arm64Version,
+      build: versionConfig.arm64?.build || 15,
+      installer: 'Arduino_Turbo_IDE_Setup.exe',
+      releaseDate: new Date().toISOString().split('T')[0],
+      fileSize: installerSize
+    },
+    x64: {
+      version: x64Version,
+      build: versionConfig.x64?.build || 13,
+      installer: 'Arduino_Turbo_IDE_Setup.exe',
+      releaseDate: new Date().toISOString().split('T')[0],
+      fileSize: installerSize
+    },
+    lastUpdated: new Date().toISOString()
+  };
 
-    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
-    console.log(`   ✔ Manifesto updates.json atualizado no servidor com sucesso.`);
-  } else {
-    console.warn('   ⚠ Servidor local offline ou inacessível no momento. O instalador ficou salvo localmente.');
-  }
-
-  console.log(`\n✔ [${label}] Processo finalizado com sucesso!`);
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf-8');
+  console.log(`   ✔ Manifesto updates.json atualizado com sucesso no servidor.`);
+} else {
+  console.warn('   ⚠ Servidor de rede offline no momento. Instalador salvo localmente.');
 }
 
-// Executar builds solicitados
-try {
-  if (buildX64) {
-    packageAndExport('x64', 'Windows x64', 'Arduino_Turbo_IDE_Windows_x64', 'Arduino_Turbo_IDE_Windows_x64.zip');
-  }
+console.log('\n==========================================================');
+console.log('  ✔ PROCESSO UNIVERSAL CONCLUÍDO COM SUCESSO!            ');
+console.log('  Instalador Universal Único: Arduino_Turbo_IDE_Setup.exe ');
+console.log('  Área de Trabalho e Servidor de Rede 100% Sincronizados! ');
+console.log('==========================================================');
 
-  if (buildArm64) {
-    packageAndExport('arm64', 'Windows ARM64', 'Arduino_Turbo_IDE_Windows_ARM64', 'Arduino_Turbo_IDE_Windows_ARM64.zip');
-  }
-
-  // Garantir que nenhuma pasta descompactada fique solta no Desktop
-  const looseDirs = [
-    path.join(desktopDir, 'Arduino_Turbo_IDE_Windows_ARM64'),
-    path.join(desktopDir, 'Arduino_Turbo_IDE_Windows_x64')
-  ];
-  for (const d of looseDirs) {
-    if (fs.existsSync(d)) {
-      try { fs.rmSync(d, { recursive: true, force: true }); } catch {}
-    }
-  }
-
-  console.log('\n==========================================================');
-  console.log('  ✔ PROCESSO CONCLUÍDO COM SUCESSO!                      ');
-  console.log('  Instaladores (.exe) e arquivos (.zip) na Área de Trabalho.');
-  console.log('  Servidor de rede atualizado com o último release.');
-  console.log('==========================================================');
-} catch (err) {
-  console.error('\n❌ Erro durante o processo de compilação:', err);
-  process.exit(1);
-}
 
