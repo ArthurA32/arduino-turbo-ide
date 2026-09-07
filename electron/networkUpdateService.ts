@@ -77,7 +77,7 @@ export class NetworkUpdateService {
     }
 
     try {
-      const raw = fs.readFileSync(manifestPath, 'utf-8');
+      const raw = fs.readFileSync(manifestPath, 'utf-8').replace(/^\uFEFF/, '');
       const manifest: UpdateManifest = JSON.parse(raw);
       const archKey = currentInfo.arch; // 'arm64' ou 'x64'
       const serverEntry = manifest[archKey];

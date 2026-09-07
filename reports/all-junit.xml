@@ -1,63 +1,65 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="23" failures="0" errors="0" time="0.5155014">
-    <testsuite name="tests/backend/nativeSerialSafety.test.ts" timestamp="2026-09-07T20:18:23.999Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0042928">
-        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; deve exigir liberação serial silenciosa disconnect(true) antes de qualquer upload ou leitura" time="0.0023213">
+<testsuites name="vitest tests" tests="24" failures="0" errors="0" time="0.5988024">
+    <testsuite name="tests/backend/nativeSerialSafety.test.ts" timestamp="2026-09-07T21:30:40.721Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0063294">
+        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; deve exigir liberação serial silenciosa disconnect(true) antes de qualquer upload ou leitura" time="0.0034789">
         </testcase>
-        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; não deve emitir desconexão ruidosa quando silent=true para não resetar estado do UI desnecessariamente" time="0.0004109">
-        </testcase>
-    </testsuite>
-    <testsuite name="tests/backend/networkUpdateService.test.ts" timestamp="2026-09-07T20:18:24.004Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.0050301">
-        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve detectar atualização quando a versão do servidor for maior" time="0.0016818">
-        </testcase>
-        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve rejeitar atualizações para versões menores ou iguais (prevenção de downgrade)" time="0.0002913">
-        </testcase>
-        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve herdar changelog universal quando a entrada específica não tiver definido" time="0.0002971">
-        </testcase>
-        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve configurar o modo /UPDATE com argumentos de auto-restart corretos" time="0.0010622">
+        <testcase classname="tests/backend/nativeSerialSafety.test.ts" name="Segurança Serial Nativa (Diretiva AGENTS.md) &gt; não deve emitir desconexão ruidosa quando silent=true para não resetar estado do UI desnecessariamente" time="0.0005249">
         </testcase>
     </testsuite>
-    <testsuite name="tests/backend/version.test.ts" timestamp="2026-09-07T20:18:24.005Z" hostname="WIN-BFB7PNSPVLR" tests="3" failures="0" errors="0" skipped="0" time="0.00667">
-        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve existir o arquivo src/version.json com estrutura válida para ARM64 e x64" time="0.0034329">
+    <testsuite name="tests/backend/networkUpdateService.test.ts" timestamp="2026-09-07T21:30:40.725Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.0049504">
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve detectar atualização quando a versão do servidor for maior" time="0.0018263">
         </testcase>
-        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve conter campo de changelog não vazio para ambas as arquiteturas" time="0.000602">
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve rejeitar atualizações para versões menores ou iguais (prevenção de downgrade)" time="0.0002836">
         </testcase>
-        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve detectar a arquitetura corretamente a partir de variáveis de ambiente do Windows" time="0.0004062">
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve herdar changelog universal quando a entrada específica não tiver definido" time="0.0002726">
         </testcase>
-    </testsuite>
-    <testsuite name="tests/e2e/userFlows.test.tsx" timestamp="2026-09-07T20:18:24.005Z" hostname="WIN-BFB7PNSPVLR" tests="5" failures="0" errors="0" skipped="0" time="0.2308422">
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 1: Deve inicializar a TopBar exibindo logotipo, versão ARM64 e botão de Update disponível" time="0.0563723">
-        </testcase>
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 2: Deve permitir alternar a placa e atualizar o esquema de partição condicional" time="0.0509981">
-        </testcase>
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 3: Deve permitir trocar a porta COM ativa pelo seletor" time="0.0471592">
-        </testcase>
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 4: Deve abrir o modal de atualização ao clicar no botão de Update e exibir notas de versão" time="0.0425996">
-        </testcase>
-        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 5: Deve acionar ações dos botões principais de compilação, gravação e leitura de chip" time="0.0311611">
+        <testcase classname="tests/backend/networkUpdateService.test.ts" name="NetworkUpdateService - Lógica de Semver e Detecção de Atualização &gt; deve configurar o modo /UPDATE com argumentos de auto-restart corretos" time="0.0009484">
         </testcase>
     </testsuite>
-    <testsuite name="tests/frontend/serialPlotterSafety.test.tsx" timestamp="2026-09-07T20:18:24.006Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0554579">
-        <testcase classname="tests/frontend/serialPlotterSafety.test.tsx" name="Segurança de Portas Nulas/Indefinidas em Componentes Seriais &gt; SerialPlotter deve renderizar sem exceção mesmo se ports for indefinido ou vazio" time="0.0383892">
+    <testsuite name="tests/backend/version.test.ts" timestamp="2026-09-07T21:30:40.726Z" hostname="WIN-BFB7PNSPVLR" tests="3" failures="0" errors="0" skipped="0" time="0.0052116">
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve existir o arquivo src/version.json com estrutura válida para ARM64 e x64" time="0.0025796">
         </testcase>
-        <testcase classname="tests/frontend/serialPlotterSafety.test.tsx" name="Segurança de Portas Nulas/Indefinidas em Componentes Seriais &gt; SerialTerminal deve renderizar sem exceção mesmo se ports for nulo" time="0.0147375">
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve conter campo de changelog não vazio para ambas as arquiteturas" time="0.0005537">
         </testcase>
-    </testsuite>
-    <testsuite name="tests/frontend/topbarSelectors.test.tsx" timestamp="2026-09-07T20:18:24.007Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.1494358">
-        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve conter as classes overflow-visible e z-40 no header para não cortar menus suspensos" time="0.0437881">
-        </testcase>
-        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o menu de seleção de placas ao clicar no botão de placa" time="0.0508542">
-        </testcase>
-        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o seletor de portas COM ao clicar" time="0.0269003">
-        </testcase>
-        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o seletor de partição Huge App quando a placa for ESP32" time="0.0251609">
+        <testcase classname="tests/backend/version.test.ts" name="Version Configuration - version.json e Detecção de Arquitetura &gt; deve detectar a arquitetura corretamente a partir de variáveis de ambiente do Windows" time="0.0002998">
         </testcase>
     </testsuite>
-    <testsuite name="tests/frontend/updateModalChangelog.test.tsx" timestamp="2026-09-07T20:18:24.008Z" hostname="WIN-BFB7PNSPVLR" tests="3" failures="0" errors="0" skipped="0" time="0.0637726">
-        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve renderizar as notas de versão dinâmicas fornecidas pelo servidor" time="0.0489991">
+    <testsuite name="tests/e2e/userFlows.test.tsx" timestamp="2026-09-07T21:30:40.727Z" hostname="WIN-BFB7PNSPVLR" tests="5" failures="0" errors="0" skipped="0" time="0.2618596">
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 1: Deve inicializar a TopBar exibindo logotipo, versão ARM64 e botão de Update disponível" time="0.0733138">
         </testcase>
-        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve exibir a data de lançamento da atualização" time="0.0098857">
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 2: Deve permitir alternar a placa e atualizar o esquema de partição condicional" time="0.0620523">
         </testcase>
-        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; não deve renderizar quando isOpen for false" time="0.0022727">
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 3: Deve permitir trocar a porta COM ativa pelo seletor" time="0.0382516">
+        </testcase>
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 4: Deve abrir o modal de atualização ao clicar no botão de Update e exibir notas de versão" time="0.0469959">
+        </testcase>
+        <testcase classname="tests/e2e/userFlows.test.tsx" name="E2E / Testes de Interface — Fluxos Reais do Usuário &gt; Cenário 5: Deve acionar ações dos botões principais de compilação, gravação e leitura de chip" time="0.0382671">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/frontend/serialPlotterSafety.test.tsx" timestamp="2026-09-07T21:30:40.728Z" hostname="WIN-BFB7PNSPVLR" tests="2" failures="0" errors="0" skipped="0" time="0.0540075">
+        <testcase classname="tests/frontend/serialPlotterSafety.test.tsx" name="Segurança de Portas Nulas/Indefinidas em Componentes Seriais &gt; SerialPlotter deve renderizar sem exceção mesmo se ports for indefinido ou vazio" time="0.0356246">
+        </testcase>
+        <testcase classname="tests/frontend/serialPlotterSafety.test.tsx" name="Segurança de Portas Nulas/Indefinidas em Componentes Seriais &gt; SerialTerminal deve renderizar sem exceção mesmo se ports for nulo" time="0.0155307">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/frontend/topbarSelectors.test.tsx" timestamp="2026-09-07T21:30:40.729Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.1656523">
+        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve conter as classes overflow-visible e z-40 no header para não cortar menus suspensos" time="0.0502767">
+        </testcase>
+        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o menu de seleção de placas ao clicar no botão de placa" time="0.0541214">
+        </testcase>
+        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o seletor de portas COM ao clicar" time="0.0320834">
+        </testcase>
+        <testcase classname="tests/frontend/topbarSelectors.test.tsx" name="TopBar - Seletores de Placas, Portas COM e Partição Flash &gt; deve abrir o seletor de partição Huge App quando a placa for ESP32" time="0.0262959">
+        </testcase>
+    </testsuite>
+    <testsuite name="tests/frontend/updateModalChangelog.test.tsx" timestamp="2026-09-07T21:30:40.730Z" hostname="WIN-BFB7PNSPVLR" tests="4" failures="0" errors="0" skipped="0" time="0.1007916">
+        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve renderizar as notas de versão dinâmicas fornecidas pelo servidor" time="0.0608896">
+        </testcase>
+        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve exibir a data de lançamento da atualização" time="0.0199352">
+        </testcase>
+        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; não deve renderizar quando isOpen for false" time="0.0030675">
+        </testcase>
+        <testcase classname="tests/frontend/updateModalChangelog.test.tsx" name="UpdateModal - Changelog Dinâmico e Formatação &gt; deve alternar de fechado para aberto e vice-versa sem erro de hooks (React error #310)" time="0.0132545">
         </testcase>
     </testsuite>
 </testsuites>
