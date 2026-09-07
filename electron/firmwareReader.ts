@@ -4,6 +4,7 @@ import path from 'path';
 import os from 'os';
 import { nativeSerial } from './nativeSerial';
 import { diagnostics } from './diagnostics';
+import { nativeFlasher } from './nativeFlasher';
 
 export interface ReadFirmwareOptions {
   port: string;
@@ -138,25 +139,9 @@ class FirmwareReaderService {
 
     try {
       if (arch === 'esp32') {
-        const esptoolPath = this.findInArduino15('esptool.exe') || 'esptool';
-        const sizeHex = `0x${readSizeBytes.toString(16)}`;
-        const args = ['--port', port, '--baud', '921600', 'read_flash', '0', sizeHex, dumpBinPath];
-
-        diagnostics.logSystem(`Executando esptool: ${esptoolPath} ${args.join(' ')}`);
-
-        await new Promise<void>((resolve, reject) => {
-          const process = spawn(esptoolPath, args, { windowsHide: true });
-          let stderr = '';
-          process.stderr.on('data', (d) => { stderr += d.toString(); });
-          process.stdout.on('data', (d) => { diagnostics.logSystem(`[esptool] ${d.toString().trim()}`); });
-          process.on('close', (code) => {
-            if (code === 0 && fs.existsSync(dumpBinPath) && fs.statSync(dumpBinPath).size > 0) {
-              resolve();
-            } else {
-              reject(new Error(`Falha ao ler flash do ESP32 via esptool (código ${code}): ${stderr}`));
-            }
-          });
-          process.on('error', (err) => reject(err));
+        diagnostics.logSystem(`Executando leitura de flash via NativeFlasher para ${port}...`);
+        await nativeFlasher.readFlash(port, readSizeBytes, dumpBinPath, (msg) => {
+          diagnostics.logSystem(`[esptool read] ${msg}`);
         });
       } else if (arch === 'avr') {
         const avrdudePath = this.findInArduino15('avrdude.exe') || 'avrdude';
@@ -584,22 +569,9 @@ class FirmwareReaderService {
 
     try {
       if (arch === 'esp32') {
-        const esptoolPath = this.findInArduino15('esptool.exe') || 'esptool';
-        // Regrava na Flash do ESP32 no endereço 0x0 ou 0x10000
-        const args = ['--port', port, '--baud', '921600', 'write_flash', '0x0', binaryPath];
-
-        diagnostics.logSystem(`Executando gravação esptool: ${esptoolPath} ${args.join(' ')}`);
-
-        await new Promise<void>((resolve, reject) => {
-          const proc = spawn(esptoolPath, args, { windowsHide: true });
-          let stderr = '';
-          proc.stderr.on('data', (d) => { stderr += d.toString(); });
-          proc.stdout.on('data', (d) => { diagnostics.logSystem(`[esptool write] ${d.toString().trim()}`); });
-          proc.on('close', (code) => {
-            if (code === 0) resolve();
-            else reject(new Error(`Falha ao regravar ESP32 (código ${code}): ${stderr}`));
-          });
-          proc.on('error', (err) => reject(err));
+        diagnostics.logSystem(`Executando gravação de patch via NativeFlasher para ${port}...`);
+        await nativeFlasher.writeFlashPatch(port, binaryPath, (msg) => {
+          diagnostics.logSystem(`[esptool patch] ${msg}`);
         });
       } else if (arch === 'avr') {
         const avrdudePath = this.findInArduino15('avrdude.exe') || 'avrdude';

@@ -8,6 +8,7 @@ import http from 'http';
 import { app } from 'electron';
 import { diagnostics } from './diagnostics';
 import { processManager } from './processManager';
+import { nativeFlasher } from './nativeFlasher';
 
 const execPromise = util.promisify(exec);
 
@@ -864,6 +865,25 @@ export class ArduinoCliService {
     port: string,
     onOutput: (data: string) => void
   ): Promise<boolean> {
+    const isEsp32 = fqbn.toLowerCase().includes('esp32');
+    const inputDir = fs.existsSync(buildDir) ? buildDir : TURBO_BUILD_DIR;
+
+    // Se for placa da família ESP32, priorizar o flasher nativo ARM64
+    if (isEsp32) {
+      try {
+        const flasherResult = await nativeFlasher.uploadEsp32(inputDir, fqbn, port, onOutput);
+        if (flasherResult.success) {
+          return true;
+        }
+        if (!flasherResult.fallbackNeeded) {
+          return false;
+        }
+        onOutput(`\n[AVISO]: Acionando pipeline do arduino-cli como contingência...\n`);
+      } catch (err: any) {
+        diagnostics.logUpload(`[NativeFlasher] Exceção na gravação: ${err.message}. Alternando para arduino-cli...`);
+      }
+    }
+
     const activeCli = this.getCliPath();
     onOutput(`[GRAVAÇÃO TURBO] Enviando código em alta velocidade para ${port} (${fqbn})...\n`);
     diagnostics.logUpload(`Upload turbo iniciado na porta ${port} para ${fqbn}`);
@@ -872,7 +892,6 @@ export class ArduinoCliService {
 
     return new Promise((resolve) => {
       const startTime = Date.now();
-      const inputDir = fs.existsSync(buildDir) ? buildDir : TURBO_BUILD_DIR;
       const child = spawn(activeCli, [
         'upload',
         '-p', port,

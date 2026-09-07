@@ -416,7 +416,8 @@ export const ConsoleDrawer: React.FC<ConsoleDrawerProps> = ({
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${isUploading ? 'bg-orange-400 animate-ping' : 'bg-gray-600'}`}></span>
                     <span className="font-semibold text-gray-200">esptool.py (Gravação Flash)</span>
-                    <span className="text-[10px] text-sky-400 bg-sky-950/40 px-1.5 py-0.2 rounded border border-sky-800/40">Baud: 921600</span>
+                    <span className="text-[10px] text-emerald-400 bg-emerald-950/40 px-1.5 py-0.2 rounded border border-emerald-800/40">ARM64 Nativo (Snapdragon)</span>
+                    <span className="text-[10px] text-sky-400 bg-sky-950/40 px-1.5 py-0.2 rounded border border-sky-800/40">921.6k Baud</span>
                   </div>
                   <span className={isUploading ? 'text-orange-300 font-bold' : 'text-gray-500'}>
                     {isUploading ? `Gravando em ${selectedPort || 'Porta COM'}` : 'Aguardando Upload'}

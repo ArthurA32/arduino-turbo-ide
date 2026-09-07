@@ -120,6 +120,17 @@ function packageAndExport(arch, label, folderName, zipName) {
     console.log(`   ✔ Binário nativo ${arch.toUpperCase()} do arduino-cli integrado com sucesso.`);
   }
 
+  // Se for ARM64, copiar o runtime Python ARM64 nativo para aceleração do flasher
+  if (arch === 'arm64') {
+    const pythonSrc = path.join(projectRoot, 'bin', 'arm64', 'python');
+    if (fs.existsSync(pythonSrc)) {
+      const destPython = path.join(destBin, 'arm64', 'python');
+      fs.mkdirSync(destPython, { recursive: true });
+      fs.cpSync(pythonSrc, destPython, { recursive: true });
+      console.log(`   ✔ Runtime Python ARM64 nativo integrado com sucesso para aceleração do flasher.`);
+    }
+  }
+
   // Gerar arquivo ZIP na Área de Trabalho
   if (fs.existsSync(targetZip)) {
     fs.unlinkSync(targetZip);
