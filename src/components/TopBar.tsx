@@ -591,7 +591,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 setChipMenuOpen(false);
               }}
               title="Configuração do Esquema de Partição da Memória Flash (ESP32)"
-              className="flex items-center gap-1.5 sm:gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-amber-500/40 hover:border-amber-500/70 px-2.5 rounded-lg text-amber-200 transition-all shrink-0 whitespace-nowrap shadow-sm text-xs font-medium active:scale-95"
+              className="flex items-center gap-2 h-8 bg-[#181822] hover:bg-[#222230] border border-amber-500/30 hover:border-amber-500/60 px-2.5 rounded-lg text-amber-200 transition-all shrink-0 whitespace-nowrap shadow-sm text-xs font-medium active:scale-95"
             >
               <Layers className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span className="font-medium text-amber-300 hidden lg:inline truncate max-w-[140px]">
@@ -604,19 +604,15 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
 
             {partitionDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-84 sm:w-96 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 animate-dropdownSlideDown">
-                <div className="flex items-center justify-between mb-2.5 pb-2 border-b border-[#282838] px-1">
-                  <div className="flex items-center gap-1.5 text-amber-400">
-                    <Layers className="w-4 h-4" />
-                    <span className="text-[11px] font-semibold text-gray-300 uppercase tracking-wider">Esquema de Partição Flash</span>
-                  </div>
-                  <span className="text-[10px] text-amber-400/90 font-mono bg-amber-950/60 border border-amber-600/40 px-2 py-0.5 rounded font-semibold">ESP32</span>
+              <div className="absolute left-0 top-full mt-1.5 w-80 bg-[#14141C] border border-[#2E2E40] rounded-xl shadow-2xl z-50 p-2.5 animate-dropdownSlideDown">
+                <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#282838]">
+                  <span className="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">Esquema de Partição Flash</span>
+                  <span className="text-[10px] text-gray-500 font-mono">ESP32</span>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="max-h-60 overflow-y-auto space-y-1">
                   {ESP32_PARTITIONS.map((part) => {
                     const isSelected = (partitionScheme || 'huge_app') === part.id;
-                    const sizeBadge = part.id === 'huge_app' ? '3.14 MB' : part.id === 'default' ? '1.31 MB' : part.id === 'min_spiffs' ? '1.9 MB' : '2.0 MB';
                     return (
                       <button
                         key={part.id}
@@ -626,31 +622,31 @@ export const TopBar: React.FC<TopBarProps> = ({
                           onPartitionSchemeChange?.(part.id);
                           setPartitionDropdownOpen(false);
                         }}
-                        className={`w-full text-left p-2.5 rounded-lg text-xs flex flex-col gap-1 transition-all ${
+                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex flex-col transition-colors ${
                           isSelected
-                            ? 'bg-[#00979C] text-white font-semibold shadow-sm'
-                            : 'hover:bg-[#222230] text-gray-300 bg-[#161622] border border-[#262638]'
+                            ? 'bg-amber-500/20 border border-amber-500/50 text-amber-200 font-semibold'
+                            : 'hover:bg-[#222230] text-gray-300 border border-transparent'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs">{part.labelShort}</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold">{part.labelShort}</span>
                             {part.recommended && (
-                              <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-normal uppercase ${
-                                isSelected ? 'bg-black/20 text-white' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono uppercase ${
+                                isSelected ? 'bg-amber-500/30 text-amber-300' : 'bg-amber-500/20 text-amber-400/90'
                               }`}>
                                 Recomendado
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[10px] font-mono ${isSelected ? 'text-cyan-100/80' : 'text-gray-400'}`}>
-                              {sizeBadge}
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-[10px] font-mono ${isSelected ? 'text-amber-300/80' : 'opacity-70'}`}>
+                              {part.id === 'huge_app' ? '3.14MB' : part.id === 'default' ? '1.31MB' : part.id === 'min_spiffs' ? '1.9MB' : '2.0MB'}
                             </span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-white shrink-0 stroke-[2.5]" />}
+                            {isSelected && <Check className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
                           </div>
                         </div>
-                        <span className={`text-[11px] leading-relaxed ${isSelected ? 'text-cyan-50/90' : 'text-gray-400'}`}>
+                        <span className={`text-[11px] mt-0.5 truncate ${isSelected ? 'text-amber-100/80' : 'text-gray-400'}`}>
                           {part.desc}
                         </span>
                       </button>

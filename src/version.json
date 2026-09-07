@@ -1,24 +1,20 @@
 {
   "arm64": {
-    "version": "0.2.6",
-    "build": 26,
+    "version": "0.2.7",
+    "build": 27,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Inicialização Progressiva (Staggered Startup): Carregamento em 4 estágios escalonados para garantir abertura fluida e eliminar o congelamento '(Not Responding)' no Windows.",
-      "Proteção de Rede Ultrarrápida (Zero-Freeze): Sondagem não-bloqueante por socket TCP que aborta chamadas SMB/UNC em 400ms quando executado fora da rede local.",
-      "Sincronização Assíncrona do Auto-Updater: Leitura segura de manifesto e instaladores sem bloquear o thread principal do Electron."
+      "Aba Huge App Reestilizada: Alinhamento estético e milimétrico do layout com os seletores de portas e placas, preservando 100% da identidade e paleta de cores âmbar original."
     ]
   },
   "x64": {
-    "version": "0.2.3",
-    "build": 23,
+    "version": "0.2.4",
+    "build": 24,
     "target": "Windows x64",
     "releaseDate": "2026-09-07",
     "changelog": [
-      "Inicialização Progressiva (Staggered Startup): Carregamento em 4 estágios escalonados para garantir abertura fluida e eliminar o congelamento '(Not Responding)' no Windows.",
-      "Proteção de Rede Ultrarrápida (Zero-Freeze): Sondagem não-bloqueante por socket TCP que aborta chamadas SMB/UNC em 400ms quando executado fora da rede local.",
-      "Sincronização Assíncrona do Auto-Updater: Leitura segura de manifesto e instaladores sem bloquear o thread principal do Electron."
+      "Aba Huge App Reestilizada: Alinhamento estético e milimétrico do layout com os seletores de portas e placas, preservando 100% da identidade e paleta de cores âmbar original."
     ]
   }
 }
