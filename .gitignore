@@ -15,3 +15,10 @@ arduino_turbo_build_*
 .DS_Store
 Thumbs.db
 *.swp
+
+# Python e PyInstaller temporários
+__pycache__/
+*.pyc
+superdial_hub/build/
+*.spec
+
