@@ -1,7 +1,7 @@
 """
 SuperDial Hub - Orquestrador Principal
 Ponto de entrada oficial da aplicação desktop para Windows.
-Unifica BLE Manager, Windows Actions Executor e CustomTkinter UI.
+Unifica BLE/Serial Manager, Windows Actions Executor e CustomTkinter UI com Anel Virtual.
 """
 
 import os
@@ -18,7 +18,6 @@ from actions import ActionsExecutor
 from ble_manager import BleManager
 from ui import SuperDialUI
 
-# Configuração de Logs
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] (%(name)s) %(message)s",
@@ -28,9 +27,8 @@ logger = logging.getLogger("SuperDial.Main")
 
 
 def set_app_user_model_id():
-    """Garante que a barra de tarefas do Windows trate o SuperDial Hub como uma aplicação independente."""
     try:
-        app_id = "SuperDial.Hub.Desktop.2.0"
+        app_id = "SuperDial.Hub.Desktop.2.1"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
     except Exception as e:
         logger.debug(f"Não foi possível definir AppUserModelID: {e}")
@@ -42,43 +40,36 @@ class SuperDialApp:
     def __init__(self):
         set_app_user_model_id()
 
-        # Instanciação dos Módulos
         self.audio = AudioListener()
         self.actions = ActionsExecutor(audio_listener=self.audio)
         self.ble = BleManager()
         self.ui = SuperDialUI()
 
-        # Conexão de Eventos
         self._wire_events()
 
     def _wire_events(self):
-        """Conecta os callbacks entre UI, BLE e Actions com total thread-safety."""
-
-        # ---------------------------------------------------------------------
-        # 1. Eventos do Windows Core Audio (Hardware COM) -> UI & BLE (CHAR 1)
-        # ---------------------------------------------------------------------
+        # 1. Eventos do Windows Core Audio -> UI & Placa (CHAR 1)
         def on_windows_audio_changed(volume: int, is_muted: bool):
-            # Atualiza UI na thread do Tkinter
             self.ui.after(0, lambda: self.ui.update_volume_display(volume, is_muted))
-            # Envia volume para a placa (CHAR 1) para atualizar os LEDs
             self.ble.send_volume(volume, is_muted)
 
         self.audio.add_callback(on_windows_audio_changed)
 
-        # ---------------------------------------------------------------------
-        # 2. Eventos BLE recebidos da placa (CHAR 1, 3 e 4)
-        # ---------------------------------------------------------------------
-        # CHAR 4 - Action Event (Giro ou Clique do Dial)
-        def on_ble_action_event(action_type: int, mode: int, steps: int):
-            # Executa a ação no Windows
-            self.actions.execute_action(action_type, mode, steps)
+        # 2. Eventos da Placa (CHAR 4 - Ações de Giro/Clique)
+        def on_ble_action_event(action_type: int, mode: int, val: int):
+            # Executa no Windows
+            self.actions.execute_action(action_type, mode, val)
+
+            # Se estiver nos Modos 2 a 6, rotaciona o anel de LEDs virtual
+            if mode not in (1, 7):
+                self.ui.after(0, lambda: self.ui.step_cursor_led(action_type))
 
         self.ble.on_action_event = on_ble_action_event
 
-        # Feedback da ação executada para a UI
+        # Feedback da Ação Disparada
         def on_action_dispatched(action_type: int, mode: int, action_text: str):
             self.ui.after(0, lambda: self.ui.flash_action_feedback(action_type, mode, action_text))
-            # Se a ação foi de volume (Modo 1), sincroniza a UI e envia CHAR 1
+            # Se for volume (Modo 1), sincroniza a UI
             if mode == 1:
                 curr_vol = self.audio.get_volume()
                 curr_mute = self.audio.get_mute()
@@ -87,7 +78,7 @@ class SuperDialApp:
 
         self.actions.on_action_dispatched = on_action_dispatched
 
-        # CHAR 3 - Mudança de modo vinda da placa (botão físico segurado)
+        # CHAR 3 - Mudança de modo vinda do botão da placa
         def on_ble_mode_received(mode: int):
             logger.info(f"Modo recebido da placa (CHAR 3): {mode}")
             self.ui.after(0, lambda: self.ui.set_active_mode(mode))
@@ -102,58 +93,48 @@ class SuperDialApp:
 
         self.ble.on_volume_sync = on_ble_volume_sync
 
-        # Status de Conexão BLE
-        def on_ble_connection_change(connected: bool, message: str):
-            logger.info(f"Status BLE: {message}")
+        # Status de Conexão (BLE ou Serial USB)
+        def on_connection_change(connected: bool, message: str):
+            logger.info(f"Status Conexão: {message}")
             self.ui.after(0, lambda: self.ui.update_connection_status(connected, message))
 
             if connected:
-                # Sincroniza estado inicial com a placa
                 try:
                     curr_vol = self.audio.get_volume()
                     curr_mute = self.audio.get_mute()
                     self.ble.send_volume(curr_vol, curr_mute)
                     self.ble.send_mode(self.ui.active_mode)
-                    # Envia cor RGB atual escalada pelo brilho
-                    r, g, b = self._calc_scaled_rgb()
+                    r, g, b = self.ui.current_rgb
                     self.ble.send_rgb(r, g, b)
                 except Exception as e:
                     logger.warning(f"Erro ao sincronizar estado inicial: {e}")
 
-        self.ble.on_connection_change = on_ble_connection_change
+        self.ble.on_connection_change = on_connection_change
 
-        # ---------------------------------------------------------------------
-        # 3. Ações do Modo 7 (Iluminação de Mesa) disparadas pelo Dial
-        # ---------------------------------------------------------------------
-        def on_brightness_delta(delta: int):
-            new_val = max(0, min(100, self.ui.desk_brightness + delta))
-            self.ui.after(0, lambda: self.ui.set_desk_brightness(new_val, notify=True))
+        # 3. Ações de Iluminação do Modo 7 vindas do Dial
+        def on_brightness_target(target_val: int):
+            self.ui.after(0, lambda: self.ui.set_desk_brightness(target_val, notify=True))
 
-        self.actions.on_brightness_change = on_brightness_delta
+        self.actions.on_brightness_change = on_brightness_target
 
         def on_light_toggle():
             self.ui.after(0, self.ui.toggle_desk_light)
 
         self.actions.on_light_toggle = on_light_toggle
 
-        # ---------------------------------------------------------------------
-        # 4. Ações disparadas pela UI -> Windows & BLE
-        # ---------------------------------------------------------------------
-        # Clique em um dos 7 botões de modos na UI -> escreve 1 byte na CHAR 3
+        # 4. Ações da UI -> Placa
         def on_ui_mode_selected(mode: int):
             logger.info(f"UI selecionou modo: {mode}")
             self.ble.send_mode(mode)
 
         self.ui.on_mode_selected = on_ui_mode_selected
 
-        # Slider de Volume na UI
         def on_ui_volume_slider(volume: int):
             self.audio.set_volume(volume)
             self.ble.send_volume(volume, self.audio.get_mute())
 
         self.ui.on_volume_slider_changed = on_ui_volume_slider
 
-        # Botão Mute na UI
         def on_ui_mute_toggled():
             new_mute = self.audio.toggle_mute()
             vol = self.audio.get_volume()
@@ -162,18 +143,16 @@ class SuperDialApp:
 
         self.ui.on_mute_toggled = on_ui_mute_toggled
 
-        # Seleção de Cor RGB na UI (CHAR 2)
         def on_ui_rgb_selected(r: int, g: int, b: int):
             self.ui.current_rgb = (r, g, b)
-            scaled_r, scaled_g, scaled_b = self._calc_scaled_rgb()
-            self.ble.send_rgb(scaled_r, scaled_g, scaled_b)
+            self.ble.send_rgb(r, g, b)
 
         self.ui.on_rgb_selected = on_ui_rgb_selected
 
-        # Slider de Brilho da Mesa na UI (Modo 7)
         def on_ui_brightness_changed(level: int):
-            scaled_r, scaled_g, scaled_b = self._calc_scaled_rgb()
-            self.ble.send_rgb(scaled_r, scaled_g, scaled_b)
+            r, g, b = self.ui.current_rgb
+            scale = level / 100.0 if self.ui.desk_light_on else 0.0
+            self.ble.send_rgb(int(r * scale), int(g * scale), int(b * scale))
 
         self.ui.on_brightness_slider_changed = on_ui_brightness_changed
 
@@ -182,22 +161,20 @@ class SuperDialApp:
 
         self.ui.on_light_toggle_clicked = on_ui_light_toggle
 
+        def on_reconnect_req():
+            logger.info("Reconexão solicitada pelo usuário.")
+            self.ui.update_connection_status(False, "Buscando SuperDial-Pro (Ativo)...")
+
+        self.ui.on_reconnect_clicked = on_reconnect_req
+
         def on_ui_exit():
             self.shutdown()
 
         self.ui.on_app_exit = on_ui_exit
 
-    def _calc_scaled_rgb(self):
-        """Calcula a cor RGB atual escalada pelo brilho da mesa (Modo 7)."""
-        r, g, b = self.ui.current_rgb
-        bright = self.ui.desk_brightness / 100.0 if self.ui.desk_light_on else 0.0
-        return int(r * bright), int(g * bright), int(b * bright)
-
     def run(self):
-        """Inicializa os serviços e executa o loop da UI."""
-        logger.info("Iniciando SuperDial Hub (7 Modos)...")
+        logger.info("Iniciando SuperDial Hub...")
 
-        # Inicia Audio Listener COM
         try:
             self.audio.start()
             init_vol = self.audio.get_volume()
@@ -206,13 +183,11 @@ class SuperDialApp:
         except Exception as e:
             logger.error(f"Erro ao iniciar AudioListener: {e}")
 
-        # Inicia BLE Manager
         try:
             self.ble.start()
         except Exception as e:
             logger.error(f"Erro ao iniciar BleManager: {e}")
 
-        # Centraliza a janela na tela
         self.ui.update_idletasks()
         w = self.ui.winfo_width()
         h = self.ui.winfo_height()
@@ -228,7 +203,6 @@ class SuperDialApp:
             self.shutdown()
 
     def shutdown(self):
-        """Liberação limpa de todos os recursos ao fechar a aplicação."""
         logger.info("Encerrando SuperDial Hub...")
         try:
             self.audio.stop()
