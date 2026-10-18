@@ -22,3 +22,5 @@ __pycache__/
 superdial_hub/build/
 *.spec
 
+# Android audit temporário
+android_settings_audit/
