@@ -236,9 +236,9 @@ FunctionEnd
 ; ==============================================================================
 
 Section "Instalar" SEC01
-  ; 1. Fechar qualquer instancia em execucao para prevenir lock de arquivos (sem /T para nao encerrar o proprio instalador)
+  ; 1. Fechar qualquer instancia em execucao para prevenir lock de arquivos (silencioso sem janela CMD)
   DetailPrint "Fechando eventuais instancias ativas do aplicativo..."
-  ExecWait 'taskkill /F /IM "Arduino Turbo IDE.exe"'
+  nsExec::Exec 'taskkill /F /IM "Arduino Turbo IDE.exe"'
   Sleep 1000
 
   SetOutPath "$INSTDIR"
@@ -307,7 +307,7 @@ SectionEnd
 
 Section "Uninstall"
   DetailPrint "Fechando eventuais instancias ativas..."
-  ExecWait 'taskkill /F /IM "Arduino Turbo IDE.exe" /T'
+  nsExec::Exec 'taskkill /F /IM "Arduino Turbo IDE.exe" /T'
   Sleep 500
 
   DetailPrint "Removendo atalhos..."

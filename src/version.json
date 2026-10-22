@@ -1,20 +1,24 @@
 {
   "arm64": {
-    "version": "0.3.0",
-    "build": 30,
+    "version": "0.3.1",
+    "build": 31,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-10-22",
     "changelog": [
-      "Auto-Updater Global via GitHub: Busca automatica de releases publicas do GitHub (sem necessidade de VPN ou servidor local), download com barra de progresso visual e confirmacao para instalacao e reinicio imediato."
+      "Auto-Updater Global via GitHub: Busca automatica de releases publicas do GitHub, download com barra de progresso visual e confirmacao para instalacao e reinicio imediato.",
+      "Instalador Silencioso: Eliminada a janela de prompt do CMD durante a instalacao e atualizacao.",
+      "Unificacao de Versao: Alinhamento das arquiteturas x64 e ARM64 em versao unica v0.3.1."
     ]
   },
   "x64": {
-    "version": "0.2.7",
-    "build": 27,
+    "version": "0.3.1",
+    "build": 31,
     "target": "Windows x64",
     "releaseDate": "2026-10-22",
     "changelog": [
-      "Auto-Updater Global via GitHub: Busca automatica de releases publicas do GitHub (sem necessidade de VPN ou servidor local), download com barra de progresso visual e confirmacao para instalacao e reinicio imediato."
+      "Auto-Updater Global via GitHub: Busca automatica de releases publicas do GitHub, download com barra de progresso visual e confirmacao para instalacao e reinicio imediato.",
+      "Instalador Silencioso: Eliminada a janela de prompt do CMD durante a instalacao e atualizacao.",
+      "Unificacao de Versao: Alinhamento das arquiteturas x64 e ARM64 em versao unica v0.3.1."
     ]
   }
 }
