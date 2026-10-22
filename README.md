@@ -52,12 +52,11 @@ Graças à integração com o ecossistema e engine de toolchains do Arduino CLI,
 Ao abrir o **Arduino Turbo IDE** pela primeira vez, siga este passo simples para configurar os compiladores das suas placas:
 
 1. **Localize o ícone da Nuvem:** No topo da tela, clique no ícone da **nuvem com a setinha para baixo** (Gerenciador de Cores / Plataformas).
-2. **Instale os Cores Desejados:**
-   * Instale o **Arduino AVR Core** (para placas clássicas Arduino).
-   * Instale o **Espressif ESP32 Core** (para módulos da linha ESP32).
-   * *(Opcional)* Instale os pacotes de **Raspberry Pi Pico** ou **STM32** conforme sua necessidade.
+2. **Instale os Cores Essenciais:**
+   * Instale o **Arduino AVR Core** (para placas da linha Arduino Uno, Mega, Nano, Leonardo, etc.).
+   * Instale o **Espressif ESP32 Core** (para toda a família ESP32: Classic, S2, S3, C3, C5, C6 e NodeMCU).
 3. **Aguarde a finalização:** O download é feito apenas uma única vez na máquina.
-4. **Pronto!** O Turbo IDE estará 100% preparado para criar, compilar e gravar qualquer projeto com velocidade máxima.
+4. **Pronto!** O Turbo IDE estará 100% preparado para criar, compilar e gravar seus projetos com velocidade máxima.
 
 ---
 
