@@ -2,6 +2,8 @@
 
 [![Release](https://img.shields.io/badge/Release-v0.3.1-00B4D8?style=for-the-badge&logo=github)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
 [![Platform](https://img.shields.io/badge/Windows-x64_%7C_ARM64-0078D4?style=for-the-badge&logo=windows)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
+[![Criador](https://img.shields.io/badge/Criador-ArthurA32-1F2937?style=for-the-badge&logo=github)](https://github.com/ArthurA32)
+[![Distribuicao](https://img.shields.io/badge/Distribuic%CC%A7a%CC%83o-Gratuita-10B981?style=for-the-badge)]()
 
 **Arduino Turbo IDE** é um ambiente de desenvolvimento ultrarrápido, moderno e direto ao ponto, criado para eliminar a lentidão e a burocracia do Arduino IDE tradicional.
 
@@ -145,6 +147,15 @@ Encontrou algum problema ou tem sugestões para as próximas versões?
 
 ---
 
-## ⚠️ Aviso Legal & Isenção de Responsabilidade
+## 👨‍💻 Sobre o Criador & Filosofia do Projeto
 
-O **Arduino Turbo IDE** é desenvolvido por **Arthur (ArthurA32)** e disponibilizado gratuitamente "como está", sem qualquer garantia de qualquer tipo, expressa ou implícita. Em nenhum caso o autor será responsável por qualquer reclamação, danos materiais, queima de componentes eletrônicos ou outras responsabilidades decorrentes do uso deste software.
+* **Criador & Idealizador:** **Arthur ([@ArthurA32](https://github.com/ArthurA32))**
+* **Início do Projeto:** Desenvolvido originalmente em **2026**, motivado pelo desafio prático de rodar uma IDE moderna, ágil e estável no hardware ARM do **Samsung Galaxy Book Go**, sendo posteriormente expandido com núcleos nativos de alta performance para plataformas **Windows x64**.
+* **Versão Vigente:** **v0.3.1 Oficial** (Build estável)
+* **Distribuição:** **100% Gratuito** para toda a comunidade de desenvolvedores, estudantes e entusiastas de eletrônica.
+
+### 🛡️ Engenharia com Proteções Internas de Hardware
+O **Arduino Turbo IDE** foi arquitetado com mecanismos ativos de segurança para garantir a integridade absoluta dos microcontroladores conectados:
+* **Parâmetros Pré-Otimizados de Fábrica:** Configurações de Flash DIO, frequências estáveis e esquemas de partição seguros (como *Huge App*) vêm prontos por padrão. Quem está começando não precisa se preocupar com menus confusos, e quem tem experiência encontra máxima velocidade imediata.
+* **Sistema Anti-Brick Ativo:** Validação estrita de cabeçalhos e endereços de memória antes de disparar o processo de gravação física na Flash, prevenindo danos ao bootloader do ESP32 ou Arduino.
+* **Gerenciamento Inteligente de Porta Serial:** Liberação automática de locks de comunicação serial, garantindo transição suave e sem travamentos entre o Monitor Serial e o processo de gravação.
