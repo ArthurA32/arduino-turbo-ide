@@ -1,20 +1,20 @@
 {
   "arm64": {
-    "version": "0.2.8",
-    "build": 28,
+    "version": "0.2.9",
+    "build": 29,
     "target": "Windows ARM64 Nativo",
-    "releaseDate": "2026-09-07",
+    "releaseDate": "2026-10-22",
     "changelog": [
-      "Detecção Instantânea de Portas COM: Eliminação do cache rígido de 2.5s e varredura via WQL de alto desempenho (290ms), com auto-detecção imediata ao abrir o seletor e priorização automática de placas USB (Arduino/ESP32)."
+      "Identidade do Processo: Correcao do FileDescription para exibir estritamente Arduino Turbo IDE no Gerenciador de Tarefas do Windows."
     ]
   },
   "x64": {
-    "version": "0.2.5",
-    "build": 25,
+    "version": "0.2.6",
+    "build": 26,
     "target": "Windows x64",
-    "releaseDate": "2026-09-07",
+    "releaseDate": "2026-10-22",
     "changelog": [
-      "Detecção Instantânea de Portas COM: Eliminação do cache rígido de 2.5s e varredura via WQL de alto desempenho (290ms), com auto-detecção imediata ao abrir o seletor e priorização automática de placas USB (Arduino/ESP32)."
+      "Identidade do Processo: Correcao do FileDescription para exibir estritamente Arduino Turbo IDE no Gerenciador de Tarefas do Windows."
     ]
   }
 }

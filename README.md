@@ -1,21 +1,25 @@
 # Arduino Turbo IDE 🚀
 
+[![Release](https://img.shields.io/badge/Release-v0.2.9-00B4D8?style=for-the-badge&logo=github)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
+[![Platform](https://img.shields.io/badge/Windows-x64_%7C_ARM64_(Snapdragon)-0078D4?style=for-the-badge&logo=windows)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
+[![License](https://img.shields.io/badge/License-MIT-success?style=for-the-badge)](LICENSE)
+
 **Arduino Turbo IDE** é um ambiente de desenvolvimento avançado, ultra-otimizado e de alta performance projetado para desenvolvimento de sistemas embarcados em **Arduino AVR** e microcontroladores da família **ESP32** (Classic WROOM, C3, C5, C6, S2, S3).
 
-Desenvolvido para entregar velocidade extrema de compilação, telemetria em tempo real e engenharia reversa nativa em silício, operando nativamente em **Windows x64** e **Windows ARM64 (Snapdragon X Elite / Plus)**.
+Desenvolvido para entregar velocidade extrema de compilação, telemetria em tempo real e engenharia reversa nativa em silício, operando nativamente em **Windows x64** (Intel / AMD Ryzen) e **Windows ARM64** (Qualcomm Snapdragon / Galaxy Book Go).
 
 ---
 
-## 📌 Diretiva Obrigatória de Versionamento e Segurança de Código (Git Local)
+## 📥 Download & Instalação
 
-> ⚠️ **DIRETIVA MANDATÓRIA DO PROJETO - VERSIONAMENTO AUTOMÁTICO**:
-> 
-> A partir de agora, **toda vez que uma nova funcionalidade, correção ou atualização for desenvolvida e validada como 100% funcional e sem erros (e sem que nenhum erro seja reportado)**:
-> 
-> 1. **Commit Obrigatório no Git Local**: Deve ser realizado um commit no repositório Git local com mensagem descritiva detalhando as melhorias implementadas.
-> 2. **Criação de Tags de Versão (Checkpoints)**: Sempre que uma entrega significativa for concluída, criar uma tag (`vX.X.X`) para permitir rollback instantâneo.
-> 3. **Segurança de Código**: O objetivo é garantir que o desenvolvedor possa retroceder (`git checkout` / `git reset`), comparar históricos e avançar com segurança absoluta, sem necessidade de apagar arquivos manualmente ou descompilar programas prontos para recuperar versões anteriores.
-> 4. **Isolamento de Arquivos Desnecessários (`.gitignore`)**: O versionamento preserva estritamente o código-fonte, scripts, configs e assets essenciais, excluindo `node_modules`, pastas temporárias de compilação (`arduino_turbo_build_*`), `dist`, `dist-electron` e `release`.
+Baixe a versão mais recente diretamente na aba de lançamentos oficiais:
+
+👉 **[Baixar Instalador Universal (v0.2.9)](https://github.com/ArthurA32/arduino-turbo-ide/releases/latest)**
+
+* **Instalador Universal Inteligente (`Arduino_Turbo_IDE_Setup_Universal.exe`):**  
+  Um único instalador que detecta automaticamente a arquitetura do processador da sua máquina e instala a versão nativa ideal:
+  * Em PCs Intel / AMD $\rightarrow$ Instala a versão nativa **x64**.
+  * Em PCs Snapdragon (como Galaxy Book Go) $\rightarrow$ Instala a versão nativa **ARM64** sem consumo desnecessário de emulação de bateria.
 
 ---
 
@@ -27,16 +31,16 @@ Desenvolvido para entregar velocidade extrema de compilação, telemetria em tem
 - **Identificação e Remapeamento Dinâmico de Portas GPIO**:
   - Detecta pinos físicos e portas configuradas dentro do firmware rodando no microcontrolador (ex: pinos de módulos, relés, displays ou sensores).
   - Permite alterar as portas setadas no código diretamente no binário e regravar no silício sem necessitar do código-fonte original.
-- **Exportação de Firmware**: Salvamento de imagens brutas `.bin` e `.hex` diretamente para a Área de Trabalho.
+- **Exportação de Firmware**: Salvamento de imagens brutas `.bin` e `.hex` diretamente no computador.
 
 ### 2. ⚡ Engine de Compilação Turbo (ARM64 & x64)
 - **Cache de Compilação Persistente (`--build-path`)**: Compilação de sketches subsequentes reduzida de 60-150s para apenas **0.8s a 2s**.
-- **Multi-Threading Nativo (`--jobs N`)**: Distribui tarefas entre todos os núcleos de CPU disponíveis.
+- **Multi-Threading Nativo (`--jobs N`)**: Distribui tarefas de build entre todos os núcleos de CPU disponíveis.
 - **Gravação em Alta Velocidade**: Upload via USB CDC a 921.600 baud.
 - **Binário Nativo ARM64**: Integra o binário AArch64 PE `0xAA64` do `arduino-cli.exe` no Windows ARM64.
 
 ### 3. 🛡️ Auto-Healer & Auto-Patcher de Bibliotecas (Core 3.x)
-- Download automático de bibliotecas faltantes via repositórios Git/ZIP (`BleKeyboard`, `BleMouse`, `ESPAsyncWebServer`, `AsyncTCP`, `NimBLE-Arduino`).
+- Download e injeção automática de bibliotecas faltantes via repositórios Git/ZIP (`BleKeyboard`, `BleMouse`, `ESPAsyncWebServer`, `AsyncTCP`, `NimBLE-Arduino`).
 - Patcher dinâmico de compatibilidade: Converte automaticamente assinaturas legadas `std::string` para `String` no ESP32 Core 3.x.
 
 ### 4. 📈 Osciloscópio Digital & Plotter Gráfico (60 FPS)
@@ -46,8 +50,41 @@ Desenvolvido para entregar velocidade extrema de compilação, telemetria em tem
 
 ---
 
+## 📜 Histórico e Linha do Tempo (Changelog Oficial)
+
+O desenvolvimento deste software seguiu rigorosamente a **Regra do Odômetro Decimal de 3 casas**:
+
+### 🔹 [v0.2.9] - 2026-10-22 *(Versão Atual)*
+- **Identidade no Gerenciador de Tarefas:** Correção da chave PE `FileDescription` e registro do processo para exibir estritamente `Arduino Turbo IDE` no Gerenciador de Tarefas do Windows.
+- **Unificação do Instalador Universal:** O pipeline agora foca e entrega o instalador universal inteligente unificado na Área de Trabalho.
+- **Auditoria de Metadados:** Alinhamento de cabeçalhos PE para x64 e ARM64.
+
+### 🔹 [v0.2.5 - v0.2.8] - 2026-09-07
+- **Detecção Instantânea de Portas COM via WQL:** Redução de latência de varredura serial de 2.500ms para 290ms.
+- **Auto-Detecção de Placas:** Identificação imediata de microcontroladores USB plugados (Arduino / ESP32).
+- **Crash Logging Resiliente:** Monitoramento de exceções e relatórios emergenciais na raiz do app.
+
+### 🔹 [v0.2.0 - v0.2.4]
+- **Arquitetura Universal NSIS:** Criação do script de setup com detecção de hardware em tempo de execução via APIs nativas do Windows.
+- **Refatoração do Monitor Serial:** Unificação de consoles e eliminação de controles redundantes.
+
+### 🔹 [v0.1.0 - v0.1.8]
+- **Toolchain Nativo ARM64:** Compilação do ecossistema `arduino-cli` e runtime embedded de Python 3.12 para Snapdragon AArch64.
+- **Multi-Target Inicial:** Primeiros builds paralelos para x64 e ARM64.
+
+---
+
 ## 🛠️ Tecnologias Utilizadas
-- **Framework Desktop**: Electron 35 + Node.js
+
+- **Shell Desktop**: Electron 35 + Node.js
 - **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS
-- **Editor de Código**: Monaco Editor (VS Code core) com IntelliSense nativo C++/Arduino
+- **Editor de Código**: Monaco Editor (núcleo do VS Code) com IntelliSense nativo C++/Arduino
 - **Toolchains de Embarcados**: Arduino CLI, avrdude, esptool, avr-objdump, xtensa-esp32-elf-objdump, riscv32-esp-elf-objdump
+
+---
+
+## 🤝 Contribuições e Relato de Bugs (Issues)
+
+Encontrou algum problema, travamento ou tem sugestão de novas placas?
+* Abra uma [Issue no GitHub](https://github.com/ArthurA32/arduino-turbo-ide/issues).
+* Toda notificação é analisada, replicada e corrigida nos ciclos de atualização contínua!

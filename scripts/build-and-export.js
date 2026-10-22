@@ -121,12 +121,13 @@ console.log(`   ✔ Instalador Universal gerado com sucesso: ${universalInstalle
 console.log('\n[5/5] Publicando instalador único na Área de Trabalho e no Servidor...');
 
 // Desktop:
-const desktopInstaller = path.join(desktopDir, 'Arduino_Turbo_IDE_Setup.exe');
+const desktopInstaller = path.join(desktopDir, 'Arduino_Turbo_IDE_Setup_Universal.exe');
 fs.copyFileSync(universalInstallerOutput, desktopInstaller);
 console.log(`   ✔ Instalador Universal entregue no Desktop: ${desktopInstaller}`);
 
 // Limpar instaladores separados antigos do Desktop
 const oldDesktopFiles = [
+  path.join(desktopDir, 'Arduino_Turbo_IDE_Setup.exe'),
   path.join(desktopDir, 'Arduino_Turbo_IDE_Setup_ARM64.exe'),
   path.join(desktopDir, 'Arduino_Turbo_IDE_Setup_x64.exe'),
   path.join(desktopDir, 'Arduino_Turbo_IDE_Windows_ARM64'),

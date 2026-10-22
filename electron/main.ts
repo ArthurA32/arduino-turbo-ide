@@ -47,8 +47,9 @@ process.on('unhandledRejection', (reason) => {
 });
 
 // ==========================================================
-// 2. CONTROLE DE INSTÂNCIA ÚNICA
+// 2. CONFIGURAÇÃO DE IDENTIDADE E INSTÂNCIA ÚNICA
 // ==========================================================
+app.name = 'Arduino Turbo IDE';
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.exit(0);

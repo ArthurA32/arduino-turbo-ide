@@ -12,8 +12,16 @@ SetCompressor /SOLID lzma
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\ArduinoTurboIDE"
 
 !ifndef APP_VERSION
-  !define APP_VERSION "0.1.5"
+  !define APP_VERSION "0.2.9"
 !endif
+
+VIProductVersion "${APP_VERSION}.0"
+VIAddVersionKey "ProductName" "${PRODUCT_NAME}"
+VIAddVersionKey "FileDescription" "${PRODUCT_NAME}"
+VIAddVersionKey "CompanyName" "${PRODUCT_PUBLISHER}"
+VIAddVersionKey "LegalCopyright" "Copyright (C) 2026 ${PRODUCT_PUBLISHER}"
+VIAddVersionKey "FileVersion" "${APP_VERSION}"
+VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 
 !ifndef PROJECT_ROOT
   !define PROJECT_ROOT ".."

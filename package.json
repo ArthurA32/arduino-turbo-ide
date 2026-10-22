@@ -1,9 +1,9 @@
 {
   "name": "arduino-arm-turbo-ide",
   "productName": "Arduino Turbo IDE",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "type": "module",
-  "description": "IDE ultraleve e nativa para Arduino e ESP32 otimizada para Windows x64 e ARM64",
+  "description": "Arduino Turbo IDE",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",

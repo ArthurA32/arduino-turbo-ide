@@ -57,14 +57,18 @@ module.exports = async function(context) {
     fs.copyFileSync(appIconPng, path.join(resDir, 'icon.png'));
   }
 
-  // 5. Injetar ícone no executável via rcedit se disponível
+  // 5. Injetar ícone e metadados PE no executável via rcedit se disponível
   const rceditExe = path.join(projectRoot, 'bin', 'tools', 'rcedit.exe');
   const targetExe = path.join(appOutDir, 'Arduino Turbo IDE.exe');
 
-  if (fs.existsSync(rceditExe) && fs.existsSync(appIconIco) && fs.existsSync(targetExe)) {
+  if (fs.existsSync(rceditExe) && fs.existsSync(targetExe)) {
     try {
-      execSync(`"${rceditExe}" "${targetExe}" --set-icon "${appIconIco}"`, { stdio: 'ignore' });
-      console.log(`[afterPack] ✔ Ícone oficial verificado no executável.`);
+      if (fs.existsSync(appIconIco)) {
+        execSync(`"${rceditExe}" "${targetExe}" --set-icon "${appIconIco}"`, { stdio: 'ignore' });
+      }
+      execSync(`"${rceditExe}" "${targetExe}" --set-version-string "FileDescription" "Arduino Turbo IDE"`, { stdio: 'ignore' });
+      execSync(`"${rceditExe}" "${targetExe}" --set-version-string "ProductName" "Arduino Turbo IDE"`, { stdio: 'ignore' });
+      console.log(`[afterPack] ✔ Metadados PE (FileDescription="Arduino Turbo IDE") e Ícone verificados no executável.`);
     } catch (e) {
       console.warn('[afterPack] Aviso rcedit:', e.message);
     }
