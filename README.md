@@ -2,7 +2,6 @@
 
 [![Release](https://img.shields.io/badge/Release-v0.3.1-00B4D8?style=for-the-badge&logo=github)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
 [![Platform](https://img.shields.io/badge/Windows-x64_%7C_ARM64-0078D4?style=for-the-badge&logo=windows)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
-[![License](https://img.shields.io/badge/License-MIT-success?style=for-the-badge)](LICENSE)
 
 **Arduino Turbo IDE** é um ambiente de desenvolvimento ultrarrápido, moderno e direto ao ponto, criado para eliminar a lentidão e a burocracia do Arduino IDE tradicional.
 
@@ -143,3 +142,9 @@ Ao abrir o **Arduino Turbo IDE** pela primeira vez:
 Encontrou algum problema ou tem sugestões para as próximas versões?
 * Abra uma [Issue no GitHub](https://github.com/ArthurA32/arduino-turbo-ide/issues).
 * Todas as sugestões são analisadas e testadas diretamente na bancada de hardware!
+
+---
+
+## ⚠️ Aviso Legal & Isenção de Responsabilidade
+
+O **Arduino Turbo IDE** é desenvolvido por **Arthur (ArthurA32)** e disponibilizado gratuitamente "como está", sem qualquer garantia de qualquer tipo, expressa ou implícita. Em nenhum caso o autor será responsável por qualquer reclamação, danos materiais, queima de componentes eletrônicos ou outras responsabilidades decorrentes do uso deste software.

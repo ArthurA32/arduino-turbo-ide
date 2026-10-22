@@ -28,7 +28,7 @@
     "windows"
   ],
   "author": "Antigravity",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "clsx": "^2.1.1",
