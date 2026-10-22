@@ -1,6 +1,6 @@
 # Arduino Turbo IDE 🚀
 
-[![Release](https://img.shields.io/badge/Release-v0.2.9-00B4D8?style=for-the-badge&logo=github)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
+[![Release](https://img.shields.io/badge/Release-v0.3.0-00B4D8?style=for-the-badge&logo=github)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
 [![Platform](https://img.shields.io/badge/Windows-x64_%7C_ARM64-0078D4?style=for-the-badge&logo=windows)](https://github.com/ArthurA32/arduino-turbo-ide/releases)
 [![License](https://img.shields.io/badge/License-MIT-success?style=for-the-badge)](LICENSE)
 
@@ -14,7 +14,7 @@ Desenvolvido para entregar velocidade extrema de compilação, telemetria em tem
 
 Baixe a versão mais recente diretamente na aba de lançamentos oficiais:
 
-👉 **[Baixar Instalador Universal (v0.2.9)](https://github.com/ArthurA32/arduino-turbo-ide/releases/latest)**
+👉 **[Baixar Instalador Universal (v0.3.0)](https://github.com/ArthurA32/arduino-turbo-ide/releases/latest)**
 
 * **Instalador Universal Inteligente (`Arduino_Turbo_IDE_Setup_Universal.exe`):**  
   Um único instalador que detecta automaticamente a arquitetura da sua máquina e instala a versão ideal:
