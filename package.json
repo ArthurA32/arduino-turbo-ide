@@ -1,7 +1,7 @@
 {
   "name": "arduino-arm-turbo-ide",
   "productName": "Arduino Turbo IDE",
-  "version": "0.2.9",
+  "version": "0.3.0",
   "type": "module",
   "description": "Arduino Turbo IDE",
   "main": "dist-electron/main.js",

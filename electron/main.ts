@@ -543,7 +543,11 @@ ipcMain.handle('dialog:saveFile', async (event, { content, defaultPath }) => {
 
 ipcMain.handle('shell:openPath', async (event, targetPath: string) => {
   if (targetPath) {
-    await shell.openPath(targetPath);
+    if (targetPath.startsWith('http://') || targetPath.startsWith('https://')) {
+      await shell.openExternal(targetPath);
+    } else {
+      await shell.openPath(targetPath);
+    }
   }
 });
 
@@ -589,6 +593,26 @@ ipcMain.handle('update:check', async () => {
     return await networkUpdateService.checkForUpdates();
   } catch (err: any) {
     return { available: false, error: err?.message || 'Falha ao buscar atualizações.' };
+  }
+});
+
+ipcMain.handle('update:download', async () => {
+  try {
+    return await networkUpdateService.downloadUpdate((progress) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('update:progress', progress);
+      }
+    });
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Falha ao baixar atualização.' };
+  }
+});
+
+ipcMain.handle('update:apply', async () => {
+  try {
+    return await networkUpdateService.applyUpdate();
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Falha ao disparar instalação da atualização.' };
   }
 });
 

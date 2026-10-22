@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import net from 'net';
 import { spawn } from 'child_process';
 import { app } from 'electron';
 import { getAppVersionInfo } from './version';
@@ -11,15 +10,10 @@ export interface UpdateReleaseEntry {
   version: string;
   build: number;
   installer: string;
+  downloadUrl?: string;
   releaseDate: string;
   changelog?: string | string[];
   fileSize?: number;
-}
-
-export interface UpdateManifest {
-  arm64?: UpdateReleaseEntry;
-  x64?: UpdateReleaseEntry;
-  lastUpdated?: string;
 }
 
 export interface CheckUpdateResult {
@@ -27,259 +21,240 @@ export interface CheckUpdateResult {
   serverInfo?: UpdateReleaseEntry;
   currentInfo: ReturnType<typeof getAppVersionInfo>;
   installerFullPath?: string;
+  downloadUrl?: string;
   networkLocation?: string;
   error?: string;
 }
 
-/**
- * Testa se um host (IP ou hostname) está acessível na rede via TCP (ex: porta SMB 445)
- * com timeout ultracurto para jamais travar o thread do Node/Electron.
- */
-function isHostReachable(host: string, port = 445, timeoutMs = 500): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = new net.Socket();
-    let finished = false;
-
-    const finish = (val: boolean) => {
-      if (!finished) {
-        finished = true;
-        socket.destroy();
-        resolve(val);
-      }
-    };
-
-    socket.setTimeout(timeoutMs);
-    socket.once('connect', () => finish(true));
-    socket.once('timeout', () => finish(false));
-    socket.once('error', () => finish(false));
-
-    try {
-      socket.connect(port, host);
-    } catch {
-      finish(false);
-    }
-  });
+export interface UpdateProgress {
+  percent: number;
+  copiedBytes: number;
+  totalBytes: number;
 }
 
-/**
- * Verifica se um caminho está acessível de forma 100% assíncrona
- * e com timeout protetivo para evitar bloqueio em caminhos UNC ou unidades desconectadas.
- */
-function checkPathAccessible(dirPath: string, timeoutMs = 600): Promise<boolean> {
-  return new Promise((resolve) => {
-    let finished = false;
-    const timer = setTimeout(() => {
-      if (!finished) {
-        finished = true;
-        resolve(false);
-      }
-    }, timeoutMs);
+const GITHUB_REPO = 'ArthurA32/arduino-turbo-ide';
+const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
 
-    fs.promises.stat(dirPath)
-      .then((stat) => {
-        if (!finished) {
-          finished = true;
-          clearTimeout(timer);
-          resolve(true);
-        }
-      })
-      .catch(() => {
-        if (!finished) {
-          finished = true;
-          clearTimeout(timer);
-          resolve(false);
-        }
-      });
-  });
-}
-
-export class NetworkUpdateService {
-  private candidateServerDirs: string[] = [
-    'Z:\\Updates Turbo IDE',
-    '\\\\192.168.3.74\\M-servidor\\Updates Turbo IDE'
-  ];
+export class GitHubUpdateService {
+  private downloadedInstallerPath: string | null = null;
+  private cachedCheckResult: CheckUpdateResult | null = null;
 
   /**
-   * Localiza a pasta de updates acessível na rede local de forma 100% assíncrona e não-bloqueante
+   * Converte versão "0.2.9" em números para comparação
    */
-  public async resolveUpdateDirectory(): Promise<string | null> {
-    // 1. Suporte a diretório local customizado via variável de ambiente (para testes locais)
-    const customDir = process.env.TURBO_UPDATE_DIR;
-    if (customDir) {
-      const customExists = await checkPathAccessible(customDir, 600);
-      if (customExists) return customDir;
-    }
-
-    // 2. Verificação ultrarrápida do servidor SMB local (192.168.3.74:445)
-    // Se não estiver na rede local (ex: computador do primo ou café), aborta imediatamente em 400ms
-    // sem invocar chamadas de filesystem em Z: ou UNC, eliminando qualquer risco de travamento "(Not Responding)" no Windows.
-    const smbHost = '192.168.3.74';
-    const isLocalServerOnline = await isHostReachable(smbHost, 445, 400);
-    if (!isLocalServerOnline) {
-      diagnostics.logSystem(`[AutoUpdater] Servidor local (${smbHost}) inacessível (computador externo ou offline). Verificação cancelada com segurança.`);
-      return null;
-    }
-
-    for (const dir of this.candidateServerDirs) {
-      try {
-        const exists = await checkPathAccessible(dir, 600);
-        if (exists) {
-          return dir;
-        }
-      } catch (err) {
-        // Ignora falhas de acesso
-      }
-    }
-    return null;
+  private parseSemver(v: string): [number, number, number] {
+    const clean = (v || '0.0.0').replace(/^v/i, '').trim();
+    const parts = clean.split('.').map((n) => parseInt(n, 10) || 0);
+    return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
   }
 
   /**
-   * Verifica se há atualizações disponíveis no servidor de rede
+   * Compara duas versões segundo a regra do odômetro
+   */
+  private isNewerVersion(remoteVer: string, localVer: string): boolean {
+    const [rMaj, rMin, rPat] = this.parseSemver(remoteVer);
+    const [lMaj, lMin, lPat] = this.parseSemver(localVer);
+
+    if (rMaj > lMaj) return true;
+    if (rMaj === lMaj && rMin > lMin) return true;
+    if (rMaj === lMaj && rMin === lMin && rPat > lPat) return true;
+    return false;
+  }
+
+  /**
+   * Verifica se há atualizações disponíveis diretamente no GitHub Releases
    */
   public async checkForUpdates(): Promise<CheckUpdateResult> {
     const currentInfo = getAppVersionInfo();
-    const updateDir = await this.resolveUpdateDirectory();
-
-    if (!updateDir) {
-      return {
-        available: false,
-        currentInfo,
-        error: 'Servidor local não encontrado ou offline.'
-      };
-    }
-
-    const manifestPath = path.join(updateDir, 'updates.json');
-    const manifestExists = await checkPathAccessible(manifestPath, 600);
-    if (!manifestExists) {
-      return {
-        available: false,
-        currentInfo,
-        error: 'Arquivo updates.json não encontrado na pasta do servidor.'
-      };
-    }
 
     try {
-      const raw = (await fs.promises.readFile(manifestPath, 'utf-8')).replace(/^\uFEFF/, '');
-      const manifest: UpdateManifest = JSON.parse(raw);
-      const archKey = currentInfo.arch; // 'arm64' ou 'x64'
-      const serverEntry = manifest[archKey];
+      diagnostics.logSystem(`[AutoUpdater] Verificando atualizações no GitHub: ${GITHUB_REPO}...`);
 
-      if (!serverEntry) {
+      const res = await fetch(GITHUB_API_URL, {
+        headers: {
+          'User-Agent': 'Arduino-Turbo-IDE',
+          'Accept': 'application/vnd.github+json'
+        }
+      });
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          return {
+            available: false,
+            currentInfo,
+            networkLocation: 'GitHub Releases',
+            error: 'Nenhuma release publicada encontrada no repositório.'
+          };
+        }
+        throw new Error(`Resposta do GitHub HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const data = await res.json() as any;
+      const remoteTag = String(data.tag_name || '').trim();
+      const remoteVersion = remoteTag.replace(/^v/i, '');
+
+      // Localizar o executável do instalador universal nos assets da release
+      const assets = Array.isArray(data.assets) ? data.assets : [];
+      const exeAsset = assets.find((a: any) =>
+        String(a.name).toLowerCase().includes('universal') && String(a.name).toLowerCase().endsWith('.exe')
+      ) || assets.find((a: any) => String(a.name).toLowerCase().endsWith('.exe'));
+
+      if (!exeAsset) {
+        diagnostics.logSystem(`[AutoUpdater] Release ${remoteTag} encontrada, mas sem instalador .exe anexado.`);
         return {
           available: false,
           currentInfo,
-          error: `Nenhum release encontrado para ${archKey} no servidor.`
+          networkLocation: 'GitHub Releases',
+          error: 'Nenhum instalador executável (.exe) anexado nesta versão.'
         };
       }
 
-      // Herdar changelog universal se a entrada específica não tiver definido
-      if (!serverEntry.changelog && (manifest as any).universal?.changelog) {
-        serverEntry.changelog = (manifest as any).universal.changelog;
-      }
+      const isNewer = this.isNewerVersion(remoteVersion, currentInfo.version);
 
-      const installerPath = path.join(updateDir, serverEntry.installer);
-
-      // Comparação estrita para evitar falsos positivos de atualização ou downgrade indesejado
-      const parseSemver = (v: string) => (v || '0.0.0').split('.').map((n) => parseInt(n, 10) || 0);
-      const [sMaj, sMin, sPat] = parseSemver(serverEntry.version);
-      const [cMaj, cMin, cPat] = parseSemver(currentInfo.version);
-      const isVersionHigher = sMaj > cMaj || (sMaj === cMaj && (sMin > cMin || (sMin === cMin && sPat > cPat)));
-      const isNewer = (serverEntry.build > currentInfo.build) || (serverEntry.build === currentInfo.build && isVersionHigher);
-
-      const installerExists = isNewer ? await checkPathAccessible(installerPath, 800) : false;
-
-      if (isNewer && installerExists) {
-        diagnostics.logSystem(`[AutoUpdater] Nova atualização detectada: v${serverEntry.version} (Build #${serverEntry.build})`);
-        return {
-          available: true,
-          serverInfo: serverEntry,
-          currentInfo,
-          installerFullPath: installerPath,
-          networkLocation: updateDir
-        };
-      }
-
-      return {
-        available: false,
-        serverInfo: serverEntry,
-        currentInfo,
-        networkLocation: updateDir
+      const serverInfo: UpdateReleaseEntry = {
+        version: remoteVersion,
+        build: (currentInfo.build || 0) + (isNewer ? 1 : 0),
+        installer: exeAsset.name,
+        downloadUrl: exeAsset.browser_download_url,
+        fileSize: exeAsset.size,
+        releaseDate: (data.published_at || '').split('T')[0] || new Date().toISOString().split('T')[0],
+        changelog: data.body || 'Atualização de estabilidade e novas ferramentas.'
       };
+
+      this.cachedCheckResult = {
+        available: isNewer,
+        serverInfo,
+        currentInfo,
+        downloadUrl: exeAsset.browser_download_url,
+        networkLocation: `GitHub Releases (${GITHUB_REPO})`
+      };
+
+      if (isNewer) {
+        diagnostics.logSystem(`[AutoUpdater] Nova versão detectada no GitHub: v${remoteVersion} (Atual instalada: v${currentInfo.version})`);
+      } else {
+        diagnostics.logSystem(`[AutoUpdater] Aplicativo já está na versão mais recente (v${currentInfo.version}).`);
+      }
+
+      return this.cachedCheckResult;
     } catch (err: any) {
-      diagnostics.logSystem(`[AutoUpdater] Erro ao processar updates.json: ${err.message}`);
+      diagnostics.logSystem(`[AutoUpdater] Falha ao verificar no GitHub: ${err?.message}`);
       return {
         available: false,
         currentInfo,
-        error: `Erro ao ler manifesto: ${err.message}`
+        networkLocation: 'GitHub Releases',
+        error: `Não foi possível consultar o GitHub: ${err?.message || 'Sem conexão com a internet'}`
       };
     }
   }
 
   /**
-   * Baixa o instalador do servidor e executa a atualização automática
+   * Baixa o instalador a partir do link direto do GitHub Releases com progresso em tempo real
    */
-  public async installUpdate(
-    onProgress?: (progress: { percent: number; copiedBytes: number; totalBytes: number }) => void
-  ): Promise<{ success: boolean; error?: string }> {
-    const check = await this.checkForUpdates();
-    if (!check.available || !check.installerFullPath) {
-      return { success: false, error: check.error || 'Nenhuma atualização disponível para instalar.' };
+  public async downloadUpdate(
+    onProgress?: (progress: UpdateProgress) => void
+  ): Promise<{ success: boolean; installerPath?: string; error?: string }> {
+    const check = this.cachedCheckResult || (await this.checkForUpdates());
+    const downloadUrl = check.downloadUrl || check.serverInfo?.downloadUrl;
+
+    if (!downloadUrl) {
+      return { success: false, error: check.error || 'URL de download da atualização não encontrada.' };
     }
 
-    const currentInfo = check.currentInfo;
-    const sourceInstaller = check.installerFullPath;
     const tempDir = os.tmpdir();
     const destInstaller = path.join(tempDir, `Arduino_Turbo_IDE_Update_${check.serverInfo?.version || 'new'}.exe`);
 
     try {
-      diagnostics.logSystem(`[AutoUpdater] Copiando instalador de ${sourceInstaller} para ${destInstaller}...`);
+      diagnostics.logSystem(`[AutoUpdater] Iniciando download do instalador via GitHub: ${downloadUrl}`);
 
-      const totalSize = fs.statSync(sourceInstaller).size;
-      let copied = 0;
-
-      await new Promise<void>((resolve, reject) => {
-        const readStream = fs.createReadStream(sourceInstaller);
-        const writeStream = fs.createWriteStream(destInstaller);
-
-        readStream.on('data', (chunk) => {
-          copied += chunk.length;
-          if (onProgress && totalSize > 0) {
-            onProgress({
-              percent: Math.min(100, Math.round((copied / totalSize) * 100)),
-              copiedBytes: copied,
-              totalBytes: totalSize
-            });
-          }
-        });
-
-        readStream.on('error', reject);
-        writeStream.on('error', reject);
-        writeStream.on('finish', () => resolve());
-
-        readStream.pipe(writeStream);
+      const res = await fetch(downloadUrl, {
+        headers: { 'User-Agent': 'Arduino-Turbo-IDE' }
       });
 
-      diagnostics.logSystem(`[AutoUpdater] Cópia concluída com sucesso (${totalSize} bytes). Disparando instalador silencioso...`);
+      if (!res.ok || !res.body) {
+        throw new Error(`Falha ao baixar arquivo do GitHub: HTTP ${res.status}`);
+      }
 
-      // Disparar instalador em modo de atualização com barra de progresso visual (/UPDATE) e reinício automático
+      const totalBytes = Number(res.headers.get('content-length')) || check.serverInfo?.fileSize || 0;
+      let copiedBytes = 0;
+
+      const fileStream = fs.createWriteStream(destInstaller);
+      const reader = res.body.getReader();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        fileStream.write(Buffer.from(value));
+        copiedBytes += value.length;
+
+        if (onProgress && totalBytes > 0) {
+          const percent = Math.min(100, Math.round((copiedBytes / totalBytes) * 100));
+          onProgress({ percent, copiedBytes, totalBytes });
+        }
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        fileStream.end(() => resolve());
+        fileStream.on('error', reject);
+      });
+
+      diagnostics.logSystem(`[AutoUpdater] Download concluído com sucesso (${copiedBytes} bytes) em ${destInstaller}.`);
+      this.downloadedInstallerPath = destInstaller;
+
+      return { success: true, installerPath: destInstaller };
+    } catch (err: any) {
+      diagnostics.logSystem(`[AutoUpdater] Erro durante o download: ${err.message}`);
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Dispara o instalador baixado e fecha o aplicativo automaticamente
+   */
+  public async applyUpdate(): Promise<{ success: boolean; error?: string }> {
+    const installerPath = this.downloadedInstallerPath;
+
+    if (!installerPath || !fs.existsSync(installerPath)) {
+      return { success: false, error: 'Arquivo do instalador não localizado para instalação.' };
+    }
+
+    try {
+      const currentInfo = getAppVersionInfo();
       const archArg = `/ARCH=${(currentInfo?.arch || 'x64').toUpperCase()}`;
-      const child = spawn(destInstaller, ['/UPDATE', archArg, '/AUTO_RESTART'], {
+
+      diagnostics.logSystem(`[AutoUpdater] Disparando instalador: ${installerPath} ${archArg} /UPDATE /AUTO_RESTART`);
+
+      const child = spawn(installerPath, ['/UPDATE', archArg, '/AUTO_RESTART'], {
         detached: true,
         stdio: 'ignore'
       });
       child.unref();
 
-      // Fechar a aplicação em 1200ms para que a janela de progresso do instalador já apareça na tela
+      // Fechar a aplicação em 800ms para liberar os arquivos e abrir o instalador
       setTimeout(() => {
         if (app) app.quit();
-      }, 1200);
+      }, 800);
 
       return { success: true };
     } catch (err: any) {
-      diagnostics.logSystem(`[AutoUpdater] Falha ao instalar atualização: ${err.message}`);
+      diagnostics.logSystem(`[AutoUpdater] Erro ao disparar instalador: ${err.message}`);
       return { success: false, error: err.message };
     }
   }
+
+  /**
+   * Método legado unificado: baixa o instalador e aplica imediatamente
+   */
+  public async installUpdate(
+    onProgress?: (progress: UpdateProgress) => void
+  ): Promise<{ success: boolean; error?: string }> {
+    const dlResult = await this.downloadUpdate(onProgress);
+    if (!dlResult.success) {
+      return { success: false, error: dlResult.error };
+    }
+    return await this.applyUpdate();
+  }
 }
 
-export const networkUpdateService = new NetworkUpdateService();
+export const networkUpdateService = new GitHubUpdateService();
+export const gitHubUpdateService = networkUpdateService;

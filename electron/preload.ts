@@ -46,8 +46,10 @@ export interface IElectronAPI {
   onWindowRestored: (callback: () => void) => () => void;
   getAppVersion: () => Promise<{ version: string; build: number; arch: string; targetName: string; releaseDate: string; fullString: string }>;
 
-  // Atualização Automática via Servidor Local
+  // Atualização Automática via GitHub Releases
   checkForUpdates: () => Promise<any>;
+  downloadUpdate: () => Promise<{ success: boolean; installerPath?: string; error?: string }>;
+  applyUpdate: () => Promise<{ success: boolean; error?: string }>;
   installUpdate: () => Promise<{ success: boolean; error?: string }>;
   onUpdateProgress: (callback: (progress: { percent: number; copiedBytes: number; totalBytes: number }) => void) => () => void;
   onUpdateAvailable: (callback: (info: any) => void) => () => void;
@@ -124,8 +126,10 @@ const api: IElectronAPI = {
     return () => ipcRenderer.removeListener('window:restored', handler);
   },
 
-  // Auto-Update
+  // Auto-Update via GitHub
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
+  downloadUpdate: () => ipcRenderer.invoke('update:download'),
+  applyUpdate: () => ipcRenderer.invoke('update:apply'),
   installUpdate: () => ipcRenderer.invoke('update:install'),
   onUpdateProgress: (callback) => {
     const handler = (_event: any, progress: any) => callback(progress);

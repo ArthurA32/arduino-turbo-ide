@@ -3,13 +3,14 @@ import {
   X,
   Sparkles,
   DownloadCloud,
-  FolderOpen,
+  ExternalLink,
   ArrowRight,
-  Server,
+  Globe,
   RefreshCw,
   Zap,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Play
 } from 'lucide-react';
 
 interface UpdateProgress {
@@ -32,8 +33,8 @@ const parseChangelog = (raw: any): string[] => {
     return [raw.trim()];
   }
   return [
-    'Atualização de estabilidade e desempenho para Windows ARM64 e x64.',
-    'Atualização silenciosa em segundo plano com reinício automático.'
+    'Atualização de estabilidade e novas ferramentas para Windows x64 e ARM64.',
+    'Correções de desempenho e telemetria.'
   ];
 };
 
@@ -53,6 +54,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   onRecheck
 }) => {
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [isDownloaded, setIsDownloaded] = useState<boolean>(false);
+  const [isApplying, setIsApplying] = useState<boolean>(false);
   const [progress, setProgress] = useState<UpdateProgress>({ percent: 0, copiedBytes: 0, totalBytes: 0 });
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -60,6 +63,8 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setIsUpdating(false);
+      setIsDownloaded(false);
+      setIsApplying(false);
       setProgress({ percent: 0, copiedBytes: 0, totalBytes: 0 });
       setStatusMessage('');
       setErrorMessage(null);
@@ -67,9 +72,9 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
     }
 
     if (window.electronAPI && typeof window.electronAPI.onUpdateProgress === 'function') {
-      const unsub = window.electronAPI.onUpdateProgress((prog) => {
+      const unsub = window.electronAPI.onUpdateProgress((prog: UpdateProgress) => {
         setProgress(prog);
-        setStatusMessage(`Transferindo instalador do servidor... ${prog.percent}%`);
+        setStatusMessage(`Baixando atualização do GitHub... ${prog.percent}%`);
       });
       return () => unsub();
     }
@@ -79,21 +84,34 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
 
   const serverInfo = updateInfo?.serverInfo;
   const currentInfo = updateInfo?.currentInfo;
-  const networkLocation = updateInfo?.networkLocation || 'Z:\\Updates Turbo IDE';
+  const networkLocation = updateInfo?.networkLocation || 'GitHub Releases (ArthurA32/arduino-turbo-ide)';
   const changelogItems = parseChangelog(serverInfo?.changelog);
 
-  const handleInstall = async () => {
+  const handleStartDownload = async () => {
     setIsUpdating(true);
+    setIsDownloaded(false);
     setErrorMessage(null);
-    setStatusMessage('Iniciando transferência a partir do servidor de rede...');
+    setStatusMessage('Conectando ao GitHub Releases para baixar o instalador...');
 
     try {
-      const res = await window.electronAPI.installUpdate();
-      if (!res.success) {
-        setErrorMessage(res.error || 'Falha desconhecida ao iniciar instalador.');
-        setIsUpdating(false);
+      // Se a API suportar downloadUpdate separadamente:
+      if (typeof window.electronAPI.downloadUpdate === 'function') {
+        const res = await window.electronAPI.downloadUpdate();
+        if (!res.success) {
+          setErrorMessage(res.error || 'Falha ao baixar atualização do GitHub.');
+          setIsUpdating(false);
+        } else {
+          setIsDownloaded(true);
+          setIsUpdating(false);
+          setStatusMessage('Download concluído com sucesso! Pronto para instalar.');
+        }
       } else {
-        setStatusMessage('Instalação silenciosa em andamento! O Turbo IDE será reiniciado automaticamente...');
+        // Fallback para installUpdate direto
+        const res = await window.electronAPI.installUpdate();
+        if (!res.success) {
+          setErrorMessage(res.error || 'Falha ao instalar atualização.');
+          setIsUpdating(false);
+        }
       }
     } catch (err: any) {
       setErrorMessage(err.message || 'Erro inesperado na atualização.');
@@ -101,9 +119,25 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
     }
   };
 
-  const handleOpenFolder = () => {
+  const handleApplyUpdate = async () => {
+    setIsApplying(true);
+    setStatusMessage('Iniciando o instalador da atualização... O Turbo IDE será reiniciado.');
+
+    try {
+      if (typeof window.electronAPI.applyUpdate === 'function') {
+        await window.electronAPI.applyUpdate();
+      } else {
+        await window.electronAPI.installUpdate();
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao disparar instalador.');
+      setIsApplying(false);
+    }
+  };
+
+  const handleOpenGitHub = () => {
     if (window.electronAPI && typeof window.electronAPI.openPath === 'function') {
-      window.electronAPI.openPath(networkLocation);
+      window.electronAPI.openPath('https://github.com/ArthurA32/arduino-turbo-ide/releases');
     }
   };
 
@@ -158,7 +192,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                 {isChecking
                   ? 'Verificando Atualizações...'
                   : isAvailable
-                  ? 'Atualização Silenciosa Disponível'
+                  ? 'Nova Atualização Disponível'
                   : 'Arduino Turbo IDE Atualizado'}
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
                   {currentInfo?.arch?.toUpperCase() || 'ARM64'}
@@ -166,14 +200,14 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
               </h2>
               <p className="text-xs text-gray-400">
                 {isChecking
-                  ? 'Consultando servidor de rede...'
+                  ? 'Consultando GitHub Releases...'
                   : isAvailable
-                  ? 'Servidor Local Conectado (1-Click Update)'
+                  ? 'GitHub Releases Conectado'
                   : 'Você já está utilizando a versão mais recente'}
               </p>
             </div>
           </div>
-          {!isUpdating && (
+          {!isUpdating && !isApplying && (
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors"
@@ -189,7 +223,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
           {isChecking ? (
             <div className="p-8 flex flex-col items-center justify-center space-y-3 text-center">
               <RefreshCw className="w-8 h-8 animate-spin text-cyan-400" />
-              <p className="text-sm font-medium text-gray-200">Procurando atualizações no servidor local...</p>
+              <p className="text-sm font-medium text-gray-200">Consultando o repositório oficial no GitHub...</p>
               <span className="text-xs text-gray-400">{networkLocation}</span>
             </div>
           ) : isAvailable ? (
@@ -199,35 +233,35 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                 <div className="flex flex-col">
                   <span className="text-[11px] text-gray-400 font-medium">Versão Atual Instalada</span>
                   <span className="text-sm font-semibold text-gray-300">
-                    v{currentInfo?.version || '0.1.3'}{' '}
-                    <span className="text-[10px] text-gray-500 font-normal">#{currentInfo?.build || 13}</span>
+                    v{currentInfo?.version || '0.2.8'}{' '}
+                    <span className="text-[10px] text-gray-500 font-normal">#{currentInfo?.build || 28}</span>
                   </span>
                 </div>
                 <div className="flex flex-col border-l border-gray-800 pl-3">
                   <span className="text-[11px] text-cyan-400 font-medium flex items-center gap-1">
-                    Nova Versão Servidor <ArrowRight className="w-3 h-3" />
+                    Nova Versão Oficial <ArrowRight className="w-3 h-3" />
                   </span>
                   <span className="text-sm font-bold text-cyan-300">
-                    v{serverInfo?.version || '0.1.5'}{' '}
-                    <span className="text-[10px] text-cyan-500/80 font-normal">#{serverInfo?.build || 15}</span>
+                    v{serverInfo?.version || '0.2.9'}{' '}
+                    <span className="text-[10px] text-cyan-500/80 font-normal">#{serverInfo?.build || 29}</span>
                   </span>
                 </div>
               </div>
 
-              {/* Origem da Rede */}
+              {/* Origem GitHub */}
               <div className="flex items-center justify-between p-2.5 bg-gray-900/60 border border-gray-800 rounded-lg text-xs">
                 <div className="flex items-center gap-2 text-gray-300 truncate">
-                  <Server className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="truncate text-gray-400" title={networkLocation}>
-                    Origem: <strong className="text-gray-200">{networkLocation}</strong>
+                  <Globe className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <span className="truncate text-gray-400">
+                    Origem: <strong className="text-gray-200">GitHub (ArthurA32/arduino-turbo-ide)</strong>
                   </span>
                 </div>
                 <button
-                  onClick={handleOpenFolder}
+                  onClick={handleOpenGitHub}
                   className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 text-[11px] shrink-0 ml-2"
                 >
-                  <FolderOpen className="w-3.5 h-3.5" />
-                  Abrir
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Ver no GitHub
                 </button>
               </div>
 
@@ -256,15 +290,15 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                 <span>O seu aplicativo está 100% atualizado!</span>
               </div>
               <p className="text-xs text-gray-300">
-                Você já está rodando a versão estável <strong className="text-white">v{currentInfo?.version}</strong> (Build #{currentInfo?.build}) para {currentInfo?.targetName || 'Windows'}.
+                Você já está rodando a versão mais recente <strong className="text-white">v{currentInfo?.version}</strong> (Build #{currentInfo?.build}).
               </p>
               <div className="text-[11px] text-gray-400 font-mono">
-                Servidor: {networkLocation}
+                {networkLocation}
               </div>
             </div>
           )}
 
-          {/* Barra de Progresso quando estiver atualizando */}
+          {/* Barra de Progresso quando estiver baixando */}
           {isUpdating && (
             <div className="space-y-2 p-3 bg-cyan-950/20 border border-cyan-500/30 rounded-lg">
               <div className="flex items-center justify-between text-xs">
@@ -290,6 +324,25 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             </div>
           )}
 
+          {/* Alerta de Download Concluído com Sucesso */}
+          {isDownloaded && !isApplying && (
+            <div className="p-3 bg-emerald-950/30 border border-emerald-500/40 rounded-lg flex items-center gap-3 text-xs text-emerald-300">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <div>
+                <strong className="block font-semibold">Download concluído com sucesso!</strong>
+                <span className="text-gray-300">O instalador universal está pronto na memória. Deseja atualizar agora?</span>
+              </div>
+            </div>
+          )}
+
+          {/* Mensagem de Aplicação em Andamento */}
+          {isApplying && (
+            <div className="p-3 bg-cyan-950/30 border border-cyan-500/40 rounded-lg flex items-center gap-3 text-xs text-cyan-300">
+              <RefreshCw className="w-5 h-5 animate-spin text-cyan-400 shrink-0" />
+              <span>{statusMessage}</span>
+            </div>
+          )}
+
           {/* Mensagem de Erro */}
           {errorMessage && (
             <div className="p-3 bg-red-950/30 border border-red-500/40 rounded-lg flex items-start gap-2.5 text-xs text-red-300">
@@ -304,7 +357,32 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
 
         {/* Rodapé com Ações */}
         <div className="bg-[#181818] border-t border-gray-800 px-6 py-3.5 flex items-center justify-end gap-3">
-          {!isUpdating ? (
+          {/* Se a instalação estiver sendo disparada */}
+          {isApplying ? (
+            <span className="text-[11px] text-cyan-400 animate-pulse font-medium">
+              Iniciando instalador e reiniciando aplicação...
+            </span>
+          ) : isDownloaded ? (
+            /* Download concluído: Perguntar se deseja instalar agora */
+            <>
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 text-xs font-medium text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+              >
+                Instalar Depois
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyUpdate}
+                className="px-5 py-2 text-xs font-bold text-black bg-emerald-400 hover:bg-emerald-300 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all flex items-center gap-2 animate-pulse"
+              >
+                <Play className="w-4 h-4 fill-black" />
+                Instalar e Reiniciar Agora
+              </button>
+            </>
+          ) : !isUpdating ? (
+            /* Estado normal */
             isAvailable ? (
               <>
                 <button
@@ -316,11 +394,11 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={handleInstall}
+                  onClick={handleStartDownload}
                   className="px-5 py-2 text-xs font-bold text-black bg-cyan-400 hover:bg-cyan-300 rounded-lg shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all flex items-center gap-2"
                 >
                   <DownloadCloud className="w-4 h-4" />
-                  Atualizar Agora
+                  Baixar Atualização
                 </button>
               </>
             ) : (
@@ -346,7 +424,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             )
           ) : (
             <span className="text-[11px] text-gray-400 animate-pulse">
-              Aguarde a conclusão para continuar...
+              Baixando dados do GitHub... Aguarde para instalar.
             </span>
           )}
         </div>

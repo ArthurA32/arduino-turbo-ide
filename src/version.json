@@ -1,20 +1,20 @@
 {
   "arm64": {
-    "version": "0.2.9",
-    "build": 29,
+    "version": "0.3.0",
+    "build": 30,
     "target": "Windows ARM64 Nativo",
     "releaseDate": "2026-10-22",
     "changelog": [
-      "Identidade do Processo: Correcao do FileDescription para exibir estritamente Arduino Turbo IDE no Gerenciador de Tarefas do Windows."
+      "Auto-Updater Global via GitHub: Busca automatica de releases publicas do GitHub (sem necessidade de VPN ou servidor local), download com barra de progresso visual e confirmacao para instalacao e reinicio imediato."
     ]
   },
   "x64": {
-    "version": "0.2.6",
-    "build": 26,
+    "version": "0.2.7",
+    "build": 27,
     "target": "Windows x64",
     "releaseDate": "2026-10-22",
     "changelog": [
-      "Identidade do Processo: Correcao do FileDescription para exibir estritamente Arduino Turbo IDE no Gerenciador de Tarefas do Windows."
+      "Auto-Updater Global via GitHub: Busca automatica de releases publicas do GitHub (sem necessidade de VPN ou servidor local), download com barra de progresso visual e confirmacao para instalacao e reinicio imediato."
     ]
   }
 }
