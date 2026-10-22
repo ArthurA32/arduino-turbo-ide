@@ -8,6 +8,10 @@
 
 Projetado com suporte nativo de primeira classe para as arquiteturas **Windows ARM64** (Qualcomm Snapdragon) e **Windows x64** (Intel/AMD), com foco cirúrgico e otimização máxima para as duas maiores famílias de microcontroladores do mundo: **Espressif ESP32** e **Arduino AVR Oficial**.
 
+<p align="center">
+  <img src="docs/screenshots/01_tela_principal.png" alt="Arduino Turbo IDE - Tela Principal" width="100%">
+</p>
+
 ---
 
 ## 🎯 Por que o Turbo IDE foi criado?
@@ -18,6 +22,22 @@ O **Arduino Turbo IDE** nasceu de uma dor real:
 O objetivo do Turbo IDE é simples: **ser rápido, bonito, leve e ter todas as funções essenciais acessíveis diretamente na tela.**
 
 Ele abre instantaneamente, detecta sua porta USB em menos de 300ms, compila com cache inteligente e grava no microcontrolador na velocidade máxima suportada pelo hardware.
+
+---
+
+## 📸 Demonstração Visual
+
+| **Interface Principal & Monaco Editor** | **Gerenciador de Cores & Toolchain** |
+| :---: | :---: |
+| ![Interface Principal](docs/screenshots/01_tela_principal.png) | ![Gerenciador de Cores](docs/screenshots/02_gerenciador_cores.png) |
+
+| **Osciloscópio Digital & Plotter Serial (60 FPS)** | **Seletor Rápido de Placas (ESP32 & AVR)** |
+| :---: | :---: |
+| ![Plotter Gráfico](docs/screenshots/03_plotter_grafico.png) | ![Seletor de Placas](docs/screenshots/04_seletor_placas.png) |
+
+| **Gerenciador de Bibliotecas Oficial** |
+| :---: |
+| ![Gerenciador de Bibliotecas](docs/screenshots/05_gerenciador_bibliotecas.png) |
 
 ---
 

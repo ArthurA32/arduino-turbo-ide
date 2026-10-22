@@ -224,6 +224,146 @@ function createWindow() {
       });
     }
 
+    if (process.argv.includes('--capture-screens')) {
+      const targetDocsDir = 'C:\\Users\\Administrator\\Music\\arduino para arm\\docs\\screenshots';
+      if (!fs.existsSync(targetDocsDir)) {
+        fs.mkdirSync(targetDocsDir, { recursive: true });
+      }
+
+      const runAutoCapture = async () => {
+        try {
+          const logFile = path.join(targetDocsDir, 'capture.log');
+          fs.writeFileSync(logFile, `Iniciando captura em ${new Date().toISOString()}\n`);
+          
+          await new Promise((r) => setTimeout(r, 4000));
+
+          // Configura placa padrão para ESP32 Dev Module para demonstrar recursos nativos
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const esp32Board = {
+                name: 'ESP32 Dev Module',
+                fqbn: 'esp32:esp32:esp32',
+                platform: 'esp32',
+                family: 'ESP32'
+              };
+              localStorage.setItem('turbo_selected_board', JSON.stringify(esp32Board));
+            })()
+          `);
+
+          // 1. Tela Principal (Clean)
+          const img1 = await mainWindow!.webContents.capturePage();
+          fs.writeFileSync(path.join(targetDocsDir, '01_tela_principal.png'), img1.toPNG());
+          fs.appendFileSync(logFile, '01_tela_principal.png salva!\n');
+
+          // 2. Abrir Gerenciador de Cores
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const btns = Array.from(document.querySelectorAll('header button'));
+              const cloudBtn = btns.find(b => (b.title && b.title.includes('Cores')) || b.querySelector('svg.lucide-download-cloud'));
+              if (cloudBtn) cloudBtn.click();
+            })()
+          `);
+          await new Promise((r) => setTimeout(r, 1500));
+          const img2 = await mainWindow!.webContents.capturePage();
+          fs.writeFileSync(path.join(targetDocsDir, '02_gerenciador_cores.png'), img2.toPNG());
+          fs.appendFileSync(logFile, '02_gerenciador_cores.png salva!\n');
+
+          // Fechar modal de cores
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const closeBtn = Array.from(document.querySelectorAll('button')).find(b => (b.textContent && b.textContent.includes('Fechar')) || b.querySelector('svg.lucide-x'));
+              if (closeBtn) closeBtn.click();
+            })()
+          `);
+          await new Promise((r) => setTimeout(r, 1000));
+
+          // 3. Abrir Seletor de Placas
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const btns = Array.from(document.querySelectorAll('header button'));
+              const boardBtn = btns.find(b => {
+                const span = b.querySelector('span.truncate');
+                return span && !b.title?.includes('Carregar') && !b.title?.includes('Verificar');
+              });
+              if (boardBtn) boardBtn.click();
+            })()
+          `);
+          await new Promise((r) => setTimeout(r, 1500));
+          const img4 = await mainWindow!.webContents.capturePage();
+          fs.writeFileSync(path.join(targetDocsDir, '04_seletor_placas.png'), img4.toPNG());
+          fs.appendFileSync(logFile, '04_seletor_placas.png salva!\n');
+
+          // Fechar Seletor de Placas clicando novamente no botão da placa
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const btns = Array.from(document.querySelectorAll('header button'));
+              const boardBtn = btns.find(b => {
+                const span = b.querySelector('span.truncate');
+                return span && !b.title?.includes('Carregar') && !b.title?.includes('Verificar');
+              });
+              if (boardBtn) boardBtn.click();
+            })()
+          `);
+          await new Promise((r) => setTimeout(r, 1000));
+
+          // 4. Abrir Plotter Gráfico no Drawer Inferior
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const plotterBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Plotter'));
+              if (plotterBtn) plotterBtn.click();
+            })()
+          `);
+          await new Promise((r) => setTimeout(r, 1500));
+          const img3 = await mainWindow!.webContents.capturePage();
+          fs.writeFileSync(path.join(targetDocsDir, '03_plotter_grafico.png'), img3.toPNG());
+          fs.appendFileSync(logFile, '03_plotter_grafico.png salva!\n');
+
+          // Fechar Plotter clicando no botão da aba de compilação
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const compBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Saída de'));
+              if (compBtn) compBtn.click();
+            })()
+          `);
+          await new Promise((r) => setTimeout(r, 1000));
+
+          // 5. Abrir Gerenciador de Bibliotecas e alternar para Instaladas
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const btns = Array.from(document.querySelectorAll('header button'));
+              const libBtn = btns.find(b => (b.title && b.title.includes('Bibliotecas')) || b.querySelector('svg.lucide-book-open'));
+              if (libBtn) libBtn.click();
+            })()
+          `);
+          await new Promise((r) => setTimeout(r, 1500));
+          await mainWindow!.webContents.executeJavaScript(`
+            (() => {
+              const installedTab = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Instaladas'));
+              if (installedTab) installedTab.click();
+            })()
+          `);
+          await new Promise((r) => setTimeout(r, 1500));
+          const img5 = await mainWindow!.webContents.capturePage();
+          fs.writeFileSync(path.join(targetDocsDir, '05_gerenciador_bibliotecas.png'), img5.toPNG());
+          fs.appendFileSync(logFile, '05_gerenciador_bibliotecas.png salva!\n');
+
+          fs.appendFileSync(logFile, 'Todas as capturas concluidas com sucesso!\n');
+        } catch (e: any) {
+          fs.appendFileSync(path.join(targetDocsDir, 'capture.log'), 'ERRO: ' + e?.message + '\n');
+        } finally {
+          app.quit();
+        }
+      };
+
+      if (mainWindow.webContents.isLoading()) {
+        mainWindow.webContents.once('did-finish-load', () => {
+          runAutoCapture();
+        });
+      } else {
+        runAutoCapture();
+      }
+    }
+
     mainWindow.on('closed', () => {
       nativeSerial.disconnect(true);
       mainWindow = null;
