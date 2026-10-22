@@ -155,7 +155,9 @@ Encontrou algum problema ou tem sugestões para as próximas versões?
 * **Distribuição:** **100% Gratuito** para toda a comunidade de desenvolvedores, estudantes e entusiastas de eletrônica.
 
 ### 🛡️ Engenharia com Proteções Internas de Hardware
-O **Arduino Turbo IDE** foi arquitetado com mecanismos ativos de segurança para garantir a integridade absoluta dos microcontroladores conectados:
-* **Parâmetros Pré-Otimizados de Fábrica:** Configurações de Flash DIO, frequências estáveis e esquemas de partição seguros (como *Huge App*) vêm prontos por padrão. Quem está começando não precisa se preocupar com menus confusos, e quem tem experiência encontra máxima velocidade imediata.
-* **Sistema Anti-Brick Ativo:** Validação estrita de cabeçalhos e endereços de memória antes de disparar o processo de gravação física na Flash, prevenindo danos ao bootloader do ESP32 ou Arduino.
-* **Gerenciamento Inteligente de Porta Serial:** Liberação automática de locks de comunicação serial, garantindo transição suave e sem travamentos entre o Monitor Serial e o processo de gravação.
+O **Arduino Turbo IDE** foi arquitetado com mecanismos reais de proteção para garantir que tanto iniciantes quanto profissionais programem com tranquilidade absoluta:
+* **Flash Mode DIO Universal (Anti-Bootloop):** Configuração nativa em modo DIO em vez de QIO. Placas com memórias flash genéricas ou de 2 vias gravam com total estabilidade, eliminando reinicializações infinitas (*bootloops*).
+* **Auto-Healer de Estouro de Flash:** Se o sketch exceder o espaço padrão de 1.3MB, o compilador detecta o estouro automaticamente e expande o particionamento para **Huge App (3.14MB)** em tempo de execução, sem corromper o layout da memória.
+* **Diagnóstico Inteligente de Chip Conectado:** Caso você selecione um modelo no seletor e conecte outro microcontrolador na USB (ex: selecionou ESP32-S3 mas conectou um ESP32-C3), o sistema detecta a divergência física e bloqueia a gravação incorreta, alertando qual placa está realmente conectada.
+* **Prevenção de Kernel Panic (PSRAM Segura):** Acesso a PSRAM vem pré-configurado de forma segura para não disparar travamentos de kernel em placas que não possuem chip externo de RAM.
+* **Liberação Automática da Porta Serial:** Antes de qualquer gravação ou leitura de chip, todas as conexões ativas do Monitor Serial e Plotter são fechadas instantaneamente, impedindo que o processo seja interrompido pela metade por locks do Windows.
