@@ -16,11 +16,8 @@ arduino_turbo_build_*
 Thumbs.db
 *.swp
 
-# Python e PyInstaller temporários
-__pycache__/
-*.pyc
-superdial_hub/build/
-*.spec
-
-# Android audit temporário
+# Outros projetos isolados
+SuperDialHub.exe
+superdial_hub/
+build_superdial.bat
 android_settings_audit/
