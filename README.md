@@ -7,7 +7,7 @@
 
 **Arduino Turbo IDE** é um ambiente de desenvolvimento ultrarrápido, moderno e direto ao ponto, criado para eliminar a lentidão e a burocracia do Arduino IDE tradicional.
 
-Projetado com suporte nativo de primeira classe para as arquiteturas **Windows ARM64** (Qualcomm Snapdragon) e **Windows x64** (Intel/AMD), com foco cirúrgico e otimização máxima para as duas maiores famílias de microcontroladores do mundo: **Espressif ESP32** e **Arduino AVR Oficial**.
+Projetado com suporte nativo de primeira classe para as arquiteturas **Windows ARM64** (Qualcomm Snapdragon) e **Windows x64** (Intel/AMD), com foco cirúrgico no ecossistema **Espressif ESP32** e ferramentas de compilação da plataforma Arduino.
 
 <p align="center">
   <img src="docs/screenshots/01_tela_principal.png" alt="Arduino Turbo IDE - Tela Principal" width="100%">
@@ -32,7 +32,7 @@ Ele abre instantaneamente, detecta sua porta USB em menos de 300ms, compila com 
 | :---: | :---: |
 | ![Interface Principal](docs/screenshots/01_tela_principal.png) | ![Gerenciador de Cores](docs/screenshots/02_gerenciador_cores.png) |
 
-| **Osciloscópio Digital & Plotter Serial (60 FPS)** | **Seletor Rápido de Placas (ESP32 & AVR)** |
+| **Osciloscópio Digital & Plotter Serial (60 FPS)** | **Seletor Rápido de Placas** |
 | :---: | :---: |
 | ![Plotter Gráfico](docs/screenshots/03_plotter_grafico.png) | ![Seletor de Placas](docs/screenshots/04_seletor_placas.png) |
 
@@ -56,35 +56,13 @@ Baixe a versão oficial mais recente:
 
 ---
 
-## 🔌 Microcontroladores com Suporte Nativo Completo
-
-O Turbo IDE é focado nas placas que os desenvolvedores mais utilizam no dia a dia, com configurações pré-otimizadas de fábrica (USB CDC, velocidade de Flash, esquemas de partição):
-
-### 🔵 Família Espressif ESP32
-* **ESP32-C5 Dev Module** (Otimizado com USB CDC / Flash DIO / 3MB App)
-* **ESP32-C6 Dev Module** (Suporte a Wi-Fi 6, Zigbee e Thread)
-* **ESP32-C3 Dev Module** (RISC-V de alta eficiência)
-* **ESP32-S3 & ESP32-S2 Dev Module** (USB Nativo / CDC on Boot)
-* **ESP32 Dev Module Clássico** (WROOM-32 / WROVER / ESP32-WROOM)
-* **NodeMCU-32S**
-
-### 🟢 Família Arduino AVR Oficial
-* **Arduino Uno** (R3 / ATmega328P)
-* **Arduino Nano** (ATmega328P - Suporte automático a Bootloader Novo e Antigo)
-* **Arduino Mega 2560** (ATmega2560)
-* **Arduino Leonardo** (ATmega32U4 com USB nativo)
-* **Arduino Pro Mini** (5V e 3.3V)
-
----
-
 ## ⚡ Primeiro Uso: Guia Rápido de Inicialização
 
 Ao abrir o **Arduino Turbo IDE** pela primeira vez:
 
 1. **Abra o Gerenciador de Cores:** No topo da tela, clique no ícone da **Nuvem com a seta para baixo**.
 2. **Instale os Cores Desejados:**
-   * Clique em **Instalar Arduino AVR** (para usar Arduino Uno, Nano, Mega, etc.).
-   * Clique em **Instalar ESP32** (para usar placas da linha ESP32).
+   * Clique em **Instalar ESP32** (e nos pacotes que for utilizar).
 3. **Aguarde o download:** É feito apenas uma vez.
 4. **Pronto!** Selecione sua placa e porta COM na barra superior e comece a programar.
 
